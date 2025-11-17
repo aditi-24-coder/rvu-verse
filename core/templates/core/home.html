@@ -1,0 +1,272 @@
+{% extends 'core/base.html' %}
+
+{% block title %}RVUverse - Home{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Left Sidebar - Department Filter -->
+    <div class="col-lg-3 mb-4">
+        <div class="card border-primary">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fa-solid fa-filter"></i> Filter Posts
+                </h5>
+            </div>
+            <div class="card-body">
+                <h6>By Department</h6>
+                <div class="list-group">
+                    <a href="{% url 'home' %}" class="list-group-item list-group-item-action {% if not current_department %}active{% endif %}">
+                        All Departments
+                    </a>
+                    {% for dept in departments %}
+                    <a href="{% url 'home' %}?department={{ dept.id }}" class="list-group-item list-group-item-action {% if current_department == dept.id|stringformat:'s' %}active{% endif %}">
+                        {{ dept.name }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Content - Posts -->
+    <div class="col-lg-6">
+        <!-- Create Post Card -->
+        <div class="card mb-4 border-primary">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fa-solid fa-pencil"></i> Create a Post
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{% url 'home' %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        {{ post_form.content }}
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="{{ post_form.department.id_for_label }}" class="form-label">Department</label>
+                            {{ post_form.department }}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ post_form.hashtags.id_for_label }}" class="form-label">Hashtags</label>
+                            {{ post_form.hashtags }}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ post_form.image.id_for_label }}" class="form-label">Add Image (optional)</label>
+                        {{ post_form.image }}
+                        <div class="form-text">Upload an image to share with your post.</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-paper-plane"></i> Post
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Posts -->
+        {% if page_obj %}
+            {% for post in page_obj %}
+            <div class="card mb-4 post-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar-placeholder me-2">{{ post.user.username.0|upper }}</div>
+                        <div>
+                            <a href="{% url 'user_profile' username=post.user.username %}" class="text-decoration-none fw-bold">
+                                {{ post.user.username }}
+                            </a>
+                            <small class="text-muted d-block">
+                                {{ post.created_at|date:"M d, Y g:i A" }}
+                                {% if post.department %}
+                                · {{ post.department.name }}
+                                {% endif %}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">{{ post.content|linebreaks }}</p>
+                    
+                    {% if post.image %}
+                    <div class="post-image mb-3">
+                        <img src="{{ post.image.url }}" alt="Post image" class="img-fluid rounded">
+                    </div>
+                    {% endif %}
+                    
+                    {% if post.hashtags %}
+                    <div class="hashtags mb-3">
+                        {% for tag in post.extract_hashtags %}
+                        <a href="{% url 'search' %}?query={{ tag }}&search_type=hashtags" class="badge bg-secondary text-decoration-none me-1">
+                            #{{ tag }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="d-flex justify-content-between">
+                        <div class="d-flex">
+                            <button class="btn btn-sm {% if post.id in user_likes %}btn-primary like-btn-active{% else %}btn-outline-primary like-btn{% endif %}" 
+                                    data-post-id="{{ post.id }}" data-action="{% if post.id in user_likes %}unlike{% else %}like{% endif %}">
+                                <i class="fa-solid fa-thumbs-up"></i>
+                                <span class="like-count">{{ post.get_likes_count }}</span>
+                            </button>
+                            <a href="{% url 'post_detail' post_id=post.id %}" class="btn btn-sm btn-outline-secondary ms-2">
+                                <i class="fa-solid fa-comment"></i>
+                                <span>{{ post.get_comments_count }}</span>
+                            </a>
+                        </div>
+                        <a href="{% url 'post_detail' post_id=post.id %}" class="btn btn-sm btn-outline-info">
+                            <i class="fa-solid fa-ellipsis-h"></i> Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if current_department %}&department={{ current_department }}{% endif %}" aria-label="First">
+                            <span aria-hidden="true">&laquo;&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if current_department %}&department={{ current_department }}{% endif %}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                        <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if current_department %}&department={{ current_department }}{% endif %}">{{ num }}</a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if current_department %}&department={{ current_department }}{% endif %}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if current_department %}&department={{ current_department }}{% endif %}" aria-label="Last">
+                            <span aria-hidden="true">&raquo;&raquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        {% else %}
+            <div class="alert alert-info text-center" role="alert">
+                <i class="fa-solid fa-info-circle me-2"></i> No posts to display. Be the first to create a post!
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Right Sidebar - Info and Stats -->
+    <div class="col-lg-3">
+        <div class="card mb-4 border-primary">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fa-solid fa-info-circle"></i> About RVUverse
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>Welcome to RVUverse - the exclusive social platform for RV University students!</p>
+                <p>Connect with classmates, share insights, and stay updated with the latest campus events.</p>
+                <hr>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'create_post' %}" class="btn btn-outline-primary">
+                        <i class="fa-solid fa-plus"></i> Create New Post
+                    </a>
+                    <a href="{% url 'search' %}" class="btn btn-outline-secondary">
+                        <i class="fa-solid fa-search"></i> Find People & Posts
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- College Events Card Placeholder (could be expanded in a future version) -->
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fa-solid fa-calendar-alt"></i> Upcoming Campus Events
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">Check back soon for upcoming college events and activities!</p>
+                <div class="text-center">
+                    <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="text-info">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                        <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Like/Unlike functionality
+        document.querySelectorAll('.like-btn, .like-btn-active').forEach(button => {
+            button.addEventListener('click', function() {
+                const postId = this.getAttribute('data-post-id');
+                const action = this.getAttribute('data-action');
+                const likeCount = this.querySelector('.like-count');
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                
+                let url = '';
+                if (action === 'like') {
+                    url = `/post/${postId}/like/`;
+                } else {
+                    url = `/post/${postId}/unlike/`;
+                }
+                
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Update like count
+                        likeCount.textContent = data.likes_count;
+                        
+                        // Toggle button appearance
+                        if (action === 'like') {
+                            this.classList.remove('btn-outline-primary', 'like-btn');
+                            this.classList.add('btn-primary', 'like-btn-active');
+                            this.setAttribute('data-action', 'unlike');
+                        } else {
+                            this.classList.remove('btn-primary', 'like-btn-active');
+                            this.classList.add('btn-outline-primary', 'like-btn');
+                            this.setAttribute('data-action', 'like');
+                        }
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            });
+        });
+    });
+</script>
+{% endblock %}
