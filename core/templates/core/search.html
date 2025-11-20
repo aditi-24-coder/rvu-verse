@@ -1,0 +1,200 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Search - RVUverse{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Search Form -->
+    <div class="col-lg-4 mb-4">
+        <div class="card border-primary">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fa-solid fa-search"></i> Search
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="get" action="{% url 'search' %}">
+                    <div class="mb-3">
+                        <label for="{{ form.query.id_for_label }}" class="form-label">Search Term</label>
+                        {{ form.query }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.search_type.id_for_label }}" class="form-label">Search For</label>
+                        {{ form.search_type }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.department.id_for_label }}" class="form-label">Department (Optional)</label>
+                        {{ form.department }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.study_year.id_for_label }}" class="form-label">Study Year (Optional)</label>
+                        {{ form.study_year }}
+                        <div class="form-text">Only applies when searching for users.</div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa-solid fa-search"></i> Search
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fa-solid fa-info-circle"></i> Search Tips
+                </h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <i class="fa-solid fa-users text-primary me-2"></i>
+                        <strong>Find Users:</strong> Search by username or name
+                    </li>
+                    <li class="mb-2">
+                        <i class="fa-solid fa-comment-dots text-primary me-2"></i>
+                        <strong>Find Posts:</strong> Search by content or topics
+                    </li>
+                    <li class="mb-2">
+                        <i class="fa-solid fa-hashtag text-primary me-2"></i>
+                        <strong>Find by Hashtags:</strong> Search for specific hashtags like "events" or "academics"
+                    </li>
+                    <li>
+                        <i class="fa-solid fa-filter text-primary me-2"></i>
+                        <strong>Filter Results:</strong> Use department and study year to narrow down results
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Search Results -->
+    <div class="col-lg-8">
+        <div class="card border-primary">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fa-solid fa-list"></i> Search Results
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if search_performed %}
+                    {% if results %}
+                        <!-- If searching for users -->
+                        {% if form.cleaned_data.search_type == 'users' %}
+                            <div class="row row-cols-1 row-cols-md-2 g-4">
+                                {% for user_result in results %}
+                                <div class="col">
+                                    <div class="card h-100">
+                                        <div class="card-body">
+                                            <div class="d-flex align-items-center mb-3">
+                                                <div class="avatar-placeholder me-3">{{ user_result.username.0|upper }}</div>
+                                                <div>
+                                                    <h5 class="card-title mb-0">
+                                                        <a href="{% url 'user_profile' username=user_result.username %}" class="text-decoration-none">
+                                                            {{ user_result.username }}
+                                                        </a>
+                                                    </h5>
+                                                    {% if user_result.profile.department %}
+                                                    <p class="text-muted mb-0">{{ user_result.profile.department.name }}</p>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            
+                                            {% if user_result.profile.bio %}
+                                            <p class="card-text small">{{ user_result.profile.bio|truncatechars:100 }}</p>
+                                            {% endif %}
+                                            
+                                            <div class="mt-2">
+                                                <a href="{% url 'user_profile' username=user_result.username %}" class="btn btn-sm btn-outline-primary">
+                                                    View Profile
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        
+                        <!-- If searching for posts or hashtags -->
+                        {% else %}
+                            <div class="list-group mb-4">
+                                {% for post in results %}
+                                <div class="list-group-item">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <div class="avatar-placeholder me-2">{{ post.user.username.0|upper }}</div>
+                                        <div>
+                                            <a href="{% url 'user_profile' username=post.user.username %}" class="text-decoration-none fw-bold">
+                                                {{ post.user.username }}
+                                            </a>
+                                            <small class="text-muted d-block">
+                                                {{ post.created_at|date:"M d, Y g:i A" }}
+                                                {% if post.department %}
+                                                · {{ post.department.name }}
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                    </div>
+                                    
+                                    <p>{{ post.content|truncatechars:200 }}</p>
+                                    
+                                    {% if post.hashtags %}
+                                    <div class="hashtags mb-3">
+                                        {% for tag in post.extract_hashtags %}
+                                        <a href="{% url 'search' %}?query={{ tag }}&search_type=hashtags" class="badge bg-secondary text-decoration-none me-1">
+                                            #{{ tag }}
+                                        </a>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <span class="me-3">
+                                                <i class="fa-solid fa-thumbs-up text-primary"></i> {{ post.get_likes_count }}
+                                            </span>
+                                            <span>
+                                                <i class="fa-solid fa-comment text-secondary"></i> {{ post.get_comments_count }}
+                                            </span>
+                                        </div>
+                                        <a href="{% url 'post_detail' post_id=post.id %}" class="btn btn-sm btn-outline-primary">
+                                            View Post
+                                        </a>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        
+                    {% else %}
+                        <div class="text-center py-5">
+                            <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="text-muted mb-3">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                <line x1="11" y1="8" x2="11" y2="14"></line>
+                                <line x1="8" y1="11" x2="14" y2="11"></line>
+                            </svg>
+                            <h5>No results found</h5>
+                            <p class="text-muted">Try different search terms or filters.</p>
+                        </div>
+                    {% endif %}
+                    
+                {% else %}
+                    <div class="text-center py-5">
+                        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="text-primary mb-3">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        <h5>Search for users, posts, or hashtags</h5>
+                        <p class="text-muted">Use the search form to find content on RVUverse.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
