@@ -1,0 +1,129 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Notifications - RVUverse{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card border-primary">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fa-solid fa-bell"></i> Notifications
+                </h5>
+                {% if page_obj and page_obj.count > 0 %}
+                <a href="{% url 'notifications' %}?mark_all_read=true" class="btn btn-sm btn-light">
+                    <i class="fa-solid fa-check-double"></i> Mark All Read
+                </a>
+                {% endif %}
+            </div>
+            <div class="card-body p-0">
+                {% if page_obj %}
+                    <div class="list-group list-group-flush">
+                    {% for notification in page_obj %}
+                        <div class="list-group-item {% if not notification.is_read %}list-group-item-primary{% endif %}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-placeholder me-3">
+                                        {% if notification.from_user %}
+                                            {{ notification.from_user.username.0|upper }}
+                                        {% else %}
+                                            <i class="fa-solid fa-bell"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <div class="notification-text mb-1">
+                                            {{ notification.text }}
+                                        </div>
+                                        <small class="text-muted">
+                                            {{ notification.created_at|date:"M d, Y g:i A" }}
+                                        </small>
+                                    </div>
+                                </div>
+                                
+                                <div class="d-flex">
+                                    {% if not notification.is_read %}
+                                    <a href="{% url 'notifications' %}?mark_read={{ notification.id }}" class="btn btn-sm btn-outline-primary me-2">
+                                        <i class="fa-solid fa-check"></i>
+                                    </a>
+                                    {% endif %}
+                                    
+                                    {% if notification.notification_type == 'like' or notification.notification_type == 'comment' %}
+                                        <a href="{% url 'post_detail' post_id=notification.post.id %}" class="btn btn-sm btn-outline-info">
+                                            <i class="fa-solid fa-external-link-alt"></i>
+                                        </a>
+                                    {% elif notification.notification_type == 'follow' %}
+                                        <a href="{% url 'user_profile' username=notification.from_user.username %}" class="btn btn-sm btn-outline-info">
+                                            <i class="fa-solid fa-external-link-alt"></i>
+                                        </a>
+                                    {% elif notification.notification_type == 'message' %}
+                                        <a href="{% url 'messages' %}?user={{ notification.from_user.id }}" class="btn btn-sm btn-outline-info">
+                                            <i class="fa-solid fa-external-link-alt"></i>
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                    </div>
+                    
+                    <!-- Pagination -->
+                    {% if page_obj.has_other_pages %}
+                    <nav aria-label="Notification pagination" class="p-3">
+                        <ul class="pagination justify-content-center mb-0">
+                            {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1" aria-label="First">
+                                    <span aria-hidden="true">&laquo;&laquo;</span>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                            {% endif %}
+                            
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                                    <span aria-hidden="true">&raquo;&raquo;</span>
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                {% else %}
+                    <div class="text-center py-5">
+                        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="text-muted mb-3">
+                            <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 01-3.46 0"></path>
+                        </svg>
+                        <h5>No notifications yet</h5>
+                        <p class="text-muted">When someone interacts with your posts or profile, you'll see it here.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/notifications.js"></script>
+{% endblock %}
