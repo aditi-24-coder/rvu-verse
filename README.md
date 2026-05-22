@@ -1,163 +1,176 @@
-# RVUverse – A Campus Social Media Platform
+# RVUverse
 
-RVUverse is a private, college-exclusive social media platform designed specifically for RV University students.
-It enables students to connect, share updates, collaborate, and engage in academic and extracurricular discussions within a secure and authenticated environment.
+**A college-exclusive, private social media platform** designed specifically for RV University students to connect, share updates, collaborate, and engage in academic and extracurricular discussions within a secure, authenticated environment.
 
-## 🔗 Live Application:
-Please create your accounts and try using it!
-👉 https://rvuverse.onrender.com
+---
+## Table of Contents
 
-## 📌 Project Overview
-
-- **Domain:** Educational Social Media Platform
-
-- **Target Users:** RV University students
-
-- **Authentication:** Restricted to @rvu.edu.in email IDs
-
-- **Architecture:** Full-stack web application
-
-- **Methodology:** Agile + CI (Continuous Integration)
+- [Overview](#overview)
+- [Folder Structure](#folder-structure)
+- [Quick Start](#quick-start)
+- [Testing Strategy](#testing-strategy)
+- [Docker & Containerisation](#docker--containerisation)
+- [Deployment](#deployment)
+- [Screenshots](#screenshots)
+- [Dependencies](#dependencies)
+- [License](#license)
 
 ---
 
-## Features
-**User Management**
+## Overview
 
-- RVU email–only registration
+**RVUverse** addresses the need for a closed, secure campus social media workspace by restricting access strictly to students with official university credentials.
 
-- Secure login/logout
+| Feature Category | What It Provides / Key Details |
+|---|---|
+| **Secure Authentication** | Limited exclusively to official `@rvu.edu.in` email addresses. |
+| **Profile Management** | Automatic profile creation upon registration, custom avatars, and follow/unfollow mechanisms. |
+| **Posts & Engagement** | Rich text & image posts, liking/commenting features, automated hashtag parsing, and search functionality. |
+| **Academic Context** | Academic department mapping (e.g., SOCSE, SOLAS, SODI) and department-filtered feed views. |
+| **Communication Layer** | Direct one-to-one messaging and live notifications for likes, comments, follows, and messages. |
 
-- Auto-created user profiles
-
-- Follow / unfollow users
-
-**Posts & Engagement**
-
-- Create posts (text + image support)
-
-- Like and comment on posts
-
-- Hashtag extraction and search
-
-- Department-based filtering
-
-**Communication**
-
-- One-to-one messaging
-
-- Real-time-like notifications for:
-
-- Likes
-
-- Comments
-
-- Follows
-
-- Messages
-
-**Academic Context**
-
-- Department mapping (SOCSE, SOLAS, SODI, etc.)
-
-- Department-specific posts and events
 ---
 
-## Tech Stack
-**Backend**
+## Folder Structure
 
-- Django (Python)
+```
+RVUverse/
+│
+├── .github/
+│   └── workflows/
+│       ├── deploy.yml            # CI/CD deployment workflow (GitHub Actions)
+│       └── main.yml              # Automated test execution workflow
+│
+├── core/                         # Main social network features application package
+│   ├── migrations/               # Database model schema version history
+│   ├── static/                   # Static resources
+│   │   ├── css/                  # Layout stylesheets
+│   │   ├── js/                   # Live AJAX & notifications scripts
+│   │   └── svg/                  # Application logos & vector designs
+│   ├── templates/core/           # HTML user interface layouts
+│   ├── tests/                    # Automated testing suite
+│   ├── admin.py                  # Model registration for Django Admin dashboard
+│   ├── apps.py                   # App config registration
+│   ├── context_processors.py     # Custom global variables processor
+│   ├── forms.py                  # Creation and editing validation schemas
+│   ├── middleware.py             # Custom log and session tracing middleware
+│   ├── models.py                 # Application database entities
+│   ├── signals.py                # Auto-profile creation signals hooks
+│   ├── urls.py                   # App-level routing mapping
+│   └── views.py                  # UI controller controllers
+│
+├── rvuverse/                     # Root configuration package
+│   ├── __init__.py
+│   ├── asgi.py                   # Entrypoint for ASGI-compatible servers
+│   ├── settings.py               # Core application settings and configs
+│   ├── urls.py                   # Root URL dispatcher
+│   └── wsgi.py                   # Entrypoint for WSGI-compatible servers
+│
+├── .dockerignore
+├── Dockerfile
+├── docker-compose.yml
+├── manage.py                     # Django management CLI utility script
+├── pytest.ini                    # Pytest framework settings configuration
+├── requirements.txt              # Project production dependencies
+└── README.md                     # Main documentation page
+```
 
-- Django ORM
+---
 
-- SQLite (development & deployment)
+## Quick Start
 
- **Frontend**
+### Prerequisites
 
-- HTML
+- Python 3.10+
+- SQLite3 (enabled by default in Python)
+- Docker (for containerised deployment)
 
-- CSS
+### Local Development
 
-- JavaScript
+```powershell
+# Clone the repository
+git clone https://github.com/Serendipity-scribe-dev/RVUverse.git
+cd RVUverse
 
-- Bootstrap
+# Setup and activate virtual environment
+python -m venv venv
+venv\Scripts\activate
 
-**Testing & QA**
+# Install application requirements
+pip install -r requirements.txt
 
-- PyTest
+# Run database migrations
+python manage.py migrate
 
-- Django Test Framework
+# Create an administrator account
+python manage.py createsuperuser
 
-**DevOps / CI**
-
-- GitHub Actions
-
-- Automated test execution on every push and pull request
-
-**Deployment**
-
-- Render
-
-- Static & media handling
+# Run local development server
+python manage.py runserver
+# Server will run on http://localhost:8000
+```
 
 ---
 
 ## Testing Strategy
 
-A total of 12 automated tests were written to validate core functionality.
+The project contains a thorough test suite of **12 automated tests** to guarantee system stability and core integrity.
 
-**Test Coverage Includes:**
+### Run Automated Tests
 
-- User registration with RVU email validation
+```powershell
+# Run the entire test suite
+pytest
 
-- Department code choice validation
+# Run tests in verbose mode
+pytest -v
 
-- Post creation (with image upload)
+# Run a specific test module
+pytest core/tests/test_post.py
+```
 
-- Comment creation
+### Coverage Scope
 
-- Follow / unfollow functionality
+- **Verification:** User registration, domain validator checks, and email verification.
+- **Data Integrity:** Database model validations and follower relationship constraints.
+- **Features validation:** Likes counters, automatic hashtag parsing, comments, events, and registrations.
 
-- Hashtag extraction
-
-- Model integrity checks
-
-- Basic logic tests
-
-**Testing Tools:**
-
-- PyTest
-
-- Django test database (SQLite)
-  
 ---
 
-## How to Run Locally
+## Docker & Containerisation
+
+### Build Container
+
+```powershell
+# Build application container
+docker build -t rvuverse .
+
+# Run container locally
+docker run -p 8000:8000 rvuverse
 ```
-# Clone repository
-git clone https://github.com/Serendipity-scribe-dev/RVUverse.git
-cd RVUverse
 
-# Create virtual environment
-python -m venv venv
-venv\Scripts\activate   # Windows
+### Docker Compose
 
-# Install dependencies
-pip install -r requirements.txt
-
-# Run migrations
-python manage.py migrate
-
-# Start server
-python manage.py runserver
+```powershell
+# Run services with docker-compose
+docker-compose up --build
 ```
+
+---
+
+## Deployment
+
+The application is configured to deploy automatically via **Render** integrated with GitHub Actions.
+
+- **Live URL:** [https://rvuverse.onrender.com](https://rvuverse.onrender.com)
+- **Deployment Process:** Handled via `.github/workflows/deploy.yml` which deploys build updates upon push to the main branch.
+
 ---
 
 ## Screenshots
 
 <img width="827" height="410" alt="Screenshot 2026-01-10 110453" src="https://github.com/user-attachments/assets/19575a81-d680-411b-baac-33948769d821" />
 <img width="826" height="409" alt="Screenshot 2026-01-10 110501" src="https://github.com/user-attachments/assets/490ac804-ce25-4352-94ec-ef60e88e3554" />
-
 
 <img width="819" height="469" alt="Screenshot 2026-01-10 110533" src="https://github.com/user-attachments/assets/272d210d-aa2d-48bd-bc57-b06829cc7fd3" />
 
@@ -173,3 +186,21 @@ python manage.py runserver
 <img width="814" height="404" alt="Screenshot 2026-01-10 110640" src="https://github.com/user-attachments/assets/b360e747-85a2-42a6-8627-83b08f648bb4" />
 <img width="812" height="409" alt="Screenshot 2026-01-10 110649" src="https://github.com/user-attachments/assets/d49abf76-5c1f-4886-8d8d-efe479adb68a" />
 
+---
+
+## Dependencies
+
+| Library | Version | Description |
+|---|---|---|
+| **Django** | `5.2` | Core High-level Python Web Framework |
+| **gunicorn** | `23.0.0` | WSGI HTTP Server for production deployment |
+| **pillow** | `11.1.0` | Image processing library for user uploads |
+| **pytest** | Latest | Unit testing execution runner |
+| **pytest-django** | Latest | Django testing integration for pytest |
+| **python-dotenv** | Latest | Secret management file parsing |
+
+---
+
+## License
+
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
