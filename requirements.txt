@@ -9,3 +9,4 @@ pytest
 pytest-django
 coverage            # For code coverage reports
 python-dotenv       # If you're using .env files for secrets
+whitenoise==6.7.0
