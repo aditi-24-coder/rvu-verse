@@ -2,10 +2,10 @@
 
 /* ========= Variables ========= */
 :root {
-    --primary-color: #0F2557; /* Deeper Navy Blue */
-    --secondary-color: #1A365D; /* Dark Blue for secondary elements */
-    --accent-color: #2563EB; /* Bright Blue for accents */
-    --dark-color: #0B1838; /* Very Dark Blue */
+    --primary-color: #091638; /* Deeper Navy Blue */
+    --secondary-color: #0F1D3D; /* Dark Blue for secondary elements */
+    --accent-color: #1D4ED8; /* Bright Blue for accents */
+    --dark-color: #060E24; /* Very Dark Blue */
     --light-color: #EEF2FF; /* Very Light Blue tint */
     --border-color: #CBD5E1; /* Light Blue Gray */
     --success-color: #0D9488; /* Teal with blue undertone */
@@ -13,9 +13,9 @@
     --warning-color: #F59E0B; /* Amber */
     
     /* RVU colors - Enhanced Dark Blue themed colors */
-    --rvu-primary: #0F2557; /* Deep Navy Blue */
-    --rvu-secondary: #1E3A8A; /* Navy Blue */
-    --rvu-accent: #2563EB; /* Bright Blue - complementary */
+    --rvu-primary: #091638; /* Deep Navy Blue */
+    --rvu-secondary: #122556; /* Navy Blue */
+    --rvu-accent: #1D4ED8; /* Bright Blue - complementary */
 }
 
 /* ========= Global Styles ========= */
@@ -38,7 +38,7 @@ a {
 }
 
 a:hover {
-    color: #0C2D6B; /* Darker navy blue */
+    color: #071230; /* Darker navy blue */
 }
 
 .text-muted {
@@ -56,8 +56,8 @@ a:hover {
 }
 
 .btn-primary:hover {
-    background-color: #0C2D6B; /* Darker navy blue */
-    border-color: #092152;
+    background-color: #071230; /* Darker navy blue */
+    border-color: #050D22;
 }
 
 /* Adjust info button to use blue accent color */
@@ -236,7 +236,7 @@ a:hover {
 /* Footer styling */
 footer {
     margin-top: auto;
-    background-color: #0F2557; /* Deep navy blue footer */
+    background-color: #091638; /* Deep navy blue footer */
     padding: 20px 0;
     color: #fff;
 }
