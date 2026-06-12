@@ -42,4 +42,7 @@ urlpatterns = [
     # added
     path('profile/<str:username>/', views.user_profile, name='profile'),
 
+    # AJAX route for live badge counts
+    path('api/badge-counts/', views.badge_counts, name='badge_counts'),
+
 ]

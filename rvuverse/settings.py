@@ -12,8 +12,8 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-0x!y_sg(08pq5k6_c3)9u&z1e7
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
-ALLOWED_HOSTS = ['0.0.0.0', 'localhost', '127.0.0.1', '.repl.co','rvuverse.onrender.com']
-CSRF_TRUSTED_ORIGINS = ['https://rvuverse.onrender.com']
+ALLOWED_HOSTS = ['0.0.0.0', 'localhost', '127.0.0.1', '.repl.co', 'rvu-verse.onrender.com']
+CSRF_TRUSTED_ORIGINS = ['https://rvu-verse.onrender.com']
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Application definition
@@ -121,4 +121,5 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 if 'test' in sys.argv:
-    print("🧪 Running tests with database:", DATABASES['default']['NAME'])
+    print("[TEST] Running tests with database:", DATABASES['default']['NAME'])
+

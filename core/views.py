@@ -182,18 +182,7 @@ def post_detail(request, post_id):
             comment.user = request.user
             comment.post = post
             comment.save()
-            
-            # Create notification for post owner
-            if request.user != post.user:
-                Notification.objects.create(
-                    user=post.user,
-                    notification_type='comment',
-                    from_user=request.user,
-                    post=post,
-                    comment=comment,
-                    text=f"{request.user.username} commented on your post."
-                )
-            
+            # Notification is handled by signals.py (create_comment_notification)
             messages.success(request, "Comment added successfully!")
             return redirect('post_detail', post_id=post.id)
     else:
@@ -228,17 +217,7 @@ def create_post(request):
 def like_post(request, post_id):
     post = get_object_or_404(Post, id=post_id)
     like, created = Like.objects.get_or_create(user=request.user, post=post)
-    
-    # If this was a new like, create a notification
-    if created and request.user != post.user:
-        Notification.objects.create(
-            user=post.user,
-            notification_type='like',
-            from_user=request.user,
-            post=post,
-            text=f"{request.user.username} liked your post."
-        )
-    
+    # Notification is handled by signals.py (create_like_notification)
     likes_count = post.likes.count()
     return JsonResponse({'status': 'success', 'likes_count': likes_count})
 
@@ -264,16 +243,7 @@ def follow_user(request, user_id):
         follower=request.user,
         following=user_to_follow
     )
-    
-    # Create notification for the followed user
-    if created:
-        Notification.objects.create(
-            user=user_to_follow,
-            notification_type='follow',
-            from_user=request.user,
-            text=f"{request.user.username} started following you."
-        )
-    
+    # Notification is handled by signals.py (create_follow_notification)
     followers_count = Follow.objects.filter(following=user_to_follow).count()
     return JsonResponse({'status': 'success', 'followers_count': followers_count})
 
@@ -330,27 +300,36 @@ def messages_view(request):
                 message.sender = request.user
                 message.receiver = selected_user
                 message.save()
-                
-                # Create notification
-                Notification.objects.create(
-                    user=selected_user,
-                    notification_type='message',
-                    from_user=request.user,
-                    message=message,
-                    text=f"New message from {request.user.username}"
-                )
-                
+                # Notification is handled by signals.py (create_message_notification)
                 return redirect(f'/messages/?user={selected_user.id}')
         else:
             message_form = MessageForm()
     else:
         message_form = None
     
+    # Find mutual-follow users not yet in a conversation (for "Start a conversation" section)
+    users_i_follow = Follow.objects.filter(follower=request.user).values_list('following_id', flat=True)
+    users_who_follow_me = Follow.objects.filter(following=request.user).values_list('follower_id', flat=True)
+    mutual_follow_ids = set(users_i_follow) & set(users_who_follow_me)
+    conversation_ids = set(conversations.values_list('id', flat=True))
+    new_conversation_ids = mutual_follow_ids - conversation_ids - {request.user.id}
+    new_conversation_users = User.objects.filter(id__in=new_conversation_ids)
+    
+    # Build unread message count per conversation user
+    unread_counts = {}
+    unread_qs = Message.objects.filter(
+        receiver=request.user, is_read=False
+    ).values('sender_id').annotate(count=Count('id'))
+    for entry in unread_qs:
+        unread_counts[entry['sender_id']] = entry['count']
+    
     context = {
         'conversations': conversations,
         'selected_user': selected_user,
         'messages_with_user': messages_with_user,
         'message_form': message_form,
+        'new_conversation_users': new_conversation_users,
+        'unread_counts': unread_counts,
     }
     
     return render(request, 'core/messages.html', context)
@@ -375,7 +354,15 @@ def notifications_view(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    return render(request, 'core/notifications.html', {'page_obj': page_obj})
+    # Build a set of user IDs the current user is already following (for follow-back button)
+    already_following_ids = set(
+        Follow.objects.filter(follower=request.user).values_list('following_id', flat=True)
+    )
+    
+    return render(request, 'core/notifications.html', {
+        'page_obj': page_obj,
+        'already_following_ids': already_following_ids,
+    })
 
 @login_required
 def search_view(request):
@@ -693,3 +680,10 @@ def edit_post(request, post_id):
     
     return render(request, 'core/edit_post.html', {'form': form, 'post': post})
 
+
+@login_required
+def badge_counts(request):
+    """AJAX endpoint returning unread notification and message counts for navbar badges."""
+    notif_count = Notification.objects.filter(user=request.user, is_read=False).count()
+    msg_count = Message.objects.filter(receiver=request.user, is_read=False).count()
+    return JsonResponse({'notifications': notif_count, 'messages': msg_count})

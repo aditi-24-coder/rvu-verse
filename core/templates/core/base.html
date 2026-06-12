@@ -66,25 +66,21 @@
                 
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link position-relative {% if '/messages/' in request.path %}active{% endif %}" href="{% url 'messages' %}">
+                        <a class="nav-link position-relative {% if '/messages/' in request.path %}active{% endif %}" href="{% url 'messages' %}" id="navMessagesLink">
                             <i class="fa-solid fa-envelope"></i> Messages
-                            {% if unread_messages_count > 0 %}
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="navMessagesBadge" {% if unread_messages_count == 0 %}style="display:none;"{% endif %}>
                                 {{ unread_messages_count }}
                                 <span class="visually-hidden">unread messages</span>
                             </span>
-                            {% endif %}
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link position-relative {% if '/notifications/' in request.path %}active{% endif %}" href="{% url 'notifications' %}">
+                        <a class="nav-link position-relative {% if '/notifications/' in request.path %}active{% endif %}" href="{% url 'notifications' %}" id="navNotificationsLink">
                             <i class="fa-solid fa-bell"></i> Notifications
-                            {% if unread_notifications_count > 0 %}
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="navNotificationsBadge" {% if unread_notifications_count == 0 %}style="display:none;"{% endif %}>
                                 {{ unread_notifications_count }}
                                 <span class="visually-hidden">unread notifications</span>
                             </span>
-                            {% endif %}
                         </a>
                     </li>
                     <li class="nav-item dropdown">
@@ -169,5 +165,39 @@
     <script src="/static/js/main.js"></script>
     
     {% block extra_js %}{% endblock %}
+
+    {% if user.is_authenticated %}
+    <script>
+    // Auto-refresh navbar badge counts every 15 seconds
+    (function() {
+        function updateBadges() {
+            fetch('/api/badge-counts/', { credentials: 'same-origin' })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    var msgBadge = document.getElementById('navMessagesBadge');
+                    var notifBadge = document.getElementById('navNotificationsBadge');
+                    if (msgBadge) {
+                        if (data.messages > 0) {
+                            msgBadge.style.display = '';
+                            msgBadge.childNodes[0].textContent = data.messages;
+                        } else {
+                            msgBadge.style.display = 'none';
+                        }
+                    }
+                    if (notifBadge) {
+                        if (data.notifications > 0) {
+                            notifBadge.style.display = '';
+                            notifBadge.childNodes[0].textContent = data.notifications;
+                        } else {
+                            notifBadge.style.display = 'none';
+                        }
+                    }
+                })
+                .catch(function() {});
+        }
+        setInterval(updateBadges, 15000);
+    })();
+    </script>
+    {% endif %}
 </body>
 </html>

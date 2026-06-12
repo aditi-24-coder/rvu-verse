@@ -19,7 +19,7 @@
                         <a href="{% url 'messages' %}?user={{ conversation_user.id }}" 
                            class="list-group-item list-group-item-action d-flex align-items-center {% if selected_user.id == conversation_user.id %}active{% endif %}">
                             <div class="avatar-placeholder me-3">{{ conversation_user.username.0|upper }}</div>
-                            <div>
+                            <div class="flex-grow-1">
                                 <div class="fw-bold">{{ conversation_user.username }}</div>
                                 <small class="text-muted">
                                     {% if conversation_user.profile.department %}
@@ -27,11 +27,12 @@
                                     {% endif %}
                                 </small>
                             </div>
-                            
-                            {% with unread_count=conversation_user.sent_messages.filter.count %}
-                                {% if unread_count > 0 %}
-                                <span class="badge bg-danger rounded-pill ms-auto">{{ unread_count }}</span>
-                                {% endif %}
+                            {% with unread=unread_counts|default_if_none:"" %}
+                                {% for uid, count in unread_counts.items %}
+                                    {% if uid == conversation_user.id and count > 0 %}
+                                    <span class="badge bg-danger rounded-pill ms-2">{{ count }}</span>
+                                    {% endif %}
+                                {% endfor %}
                             {% endwith %}
                         </a>
                         {% endif %}
@@ -39,8 +40,29 @@
                 {% else %}
                     <div class="text-center p-4 text-muted">
                         <p>No conversations yet.</p>
-                        <p><small>Start by following users who also follow you to enable messaging.</small></p>
                     </div>
+                {% endif %}
+
+                {% if new_conversation_users %}
+                <div class="list-group-item bg-light">
+                    <small class="text-muted fw-semibold text-uppercase"><i class="fa-solid fa-user-plus me-1"></i> Start a Conversation</small>
+                </div>
+                {% for new_user in new_conversation_users %}
+                <a href="{% url 'messages' %}?user={{ new_user.id }}"
+                   class="list-group-item list-group-item-action d-flex align-items-center {% if selected_user.id == new_user.id %}active{% endif %}">
+                    <div class="avatar-placeholder me-3">{{ new_user.username.0|upper }}</div>
+                    <div>
+                        <div class="fw-bold">{{ new_user.username }}</div>
+                        <small class="text-success"><i class="fa-solid fa-handshake me-1"></i>Mutual follow</small>
+                    </div>
+                </a>
+                {% endfor %}
+                {% endif %}
+
+                {% if not conversations and not new_conversation_users %}
+                <div class="text-center p-4 text-muted">
+                    <p><small>Follow users who follow you back to start messaging.</small></p>
+                </div>
                 {% endif %}
             </div>
         </div>
@@ -80,13 +102,21 @@
                                                 {% endif %}
                                                 " style="max-width: 80%; width: fit-content;">
                                         <div>{{ message.content }}</div>
-                                        <div>
-                                            <small class="{% if message.sender == request.user %}text-light{% else %}text-muted{% endif %}">
+                                        <div class="d-flex align-items-center justify-content-end gap-1 mt-1">
+                                            <small class="{% if message.sender == request.user %}text-light{% else %}text-muted{% endif %}" style="font-size: 0.7rem;">
                                                 {{ message.created_at|date:"M d, g:i A" }}
-                                                {% if message.sender == request.user and message.is_read %}
-                                                <i class="fa-solid fa-check ms-1" title="Read"></i>
-                                                {% endif %}
                                             </small>
+                                            {% if message.sender == request.user %}
+                                                {% if message.is_read %}
+                                                <span title="Seen" style="font-size: 0.75rem;" class="text-info">
+                                                    <i class="fa-solid fa-check-double"></i>
+                                                </span>
+                                                {% else %}
+                                                <span title="Sent" style="font-size: 0.75rem;" class="text-light">
+                                                    <i class="fa-solid fa-check"></i>
+                                                </span>
+                                                {% endif %}
+                                            {% endif %}
                                         </div>
                                     </div>
                                 </div>
@@ -149,6 +179,13 @@
                 }
             });
         }
+
+        // Auto-refresh messages page every 10 seconds when viewing a conversation
+        {% if selected_user %}
+        setInterval(function() {
+            window.location.reload();
+        }, 10000);
+        {% endif %}
     });
 </script>
 {% endblock %}

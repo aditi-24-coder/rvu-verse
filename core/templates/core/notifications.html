@@ -40,22 +40,35 @@
                                     </div>
                                 </div>
                                 
-                                <div class="d-flex">
+                                <div class="d-flex gap-2 align-items-center">
                                     {% if not notification.is_read %}
-                                    <a href="{% url 'notifications' %}?mark_read={{ notification.id }}" class="btn btn-sm btn-outline-primary me-2">
+                                    <a href="{% url 'notifications' %}?mark_read={{ notification.id }}" class="btn btn-sm btn-outline-primary">
                                         <i class="fa-solid fa-check"></i>
                                     </a>
                                     {% endif %}
                                     
                                     {% if notification.notification_type == 'like' or notification.notification_type == 'comment' %}
+                                        {% if notification.post %}
                                         <a href="{% url 'post_detail' post_id=notification.post.id %}" class="btn btn-sm btn-outline-info">
                                             <i class="fa-solid fa-external-link-alt"></i>
                                         </a>
-                                    {% elif notification.notification_type == 'follow' %}
+                                        {% endif %}
+                                    {% elif notification.notification_type == 'follow' and notification.from_user %}
+                                        {% if notification.from_user.id in already_following_ids %}
+                                        <span class="btn btn-sm btn-success disabled">
+                                            <i class="fa-solid fa-user-check"></i> Following
+                                        </span>
+                                        {% else %}
+                                        <button class="btn btn-sm btn-primary follow-back-btn"
+                                                data-user-id="{{ notification.from_user.id }}"
+                                                data-notif-id="{{ notification.id }}">
+                                            <i class="fa-solid fa-user-plus"></i> Follow Back
+                                        </button>
+                                        {% endif %}
                                         <a href="{% url 'user_profile' username=notification.from_user.username %}" class="btn btn-sm btn-outline-info">
                                             <i class="fa-solid fa-external-link-alt"></i>
                                         </a>
-                                    {% elif notification.notification_type == 'message' %}
+                                    {% elif notification.notification_type == 'message' and notification.from_user %}
                                         <a href="{% url 'messages' %}?user={{ notification.from_user.id }}" class="btn btn-sm btn-outline-info">
                                             <i class="fa-solid fa-external-link-alt"></i>
                                         </a>
@@ -126,4 +139,73 @@
 
 {% block extra_js %}
 <script src="/static/js/notifications.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            document.cookie.split(';').forEach(function (c) {
+                c = c.trim();
+                if (c.startsWith(name + '=')) {
+                    cookieValue = decodeURIComponent(c.substring(name.length + 1));
+                }
+            });
+        }
+        return cookieValue;
+    }
+
+    document.querySelectorAll('.follow-back-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            const userId = this.getAttribute('data-user-id');
+            const csrfToken = getCookie('csrftoken');
+            const button = this;
+
+            button.disabled = true;
+            button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
+            fetch(`/user/${userId}/follow/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Swap button to a "Following ✓" badge
+                    const badge = document.createElement('span');
+                    badge.className = 'btn btn-sm btn-success disabled';
+                    badge.innerHTML = '<i class="fa-solid fa-user-check"></i> Following';
+                    button.replaceWith(badge);
+                } else {
+                    button.disabled = false;
+                    button.innerHTML = '<i class="fa-solid fa-user-plus"></i> Follow Back';
+                }
+            })
+            .catch(function () {
+                button.disabled = false;
+                button.innerHTML = '<i class="fa-solid fa-user-plus"></i> Follow Back';
+            });
+        });
+    });
+});
+
+// Auto-refresh notifications page every 30 seconds if new notifications arrive
+(function() {
+    var lastCount = {{ page_obj.paginator.count|default:"0" }};
+    setInterval(function() {
+        fetch('/api/badge-counts/', { credentials: 'same-origin' })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                // Reload if notification count changed (new notifications arrived)
+                if (data.notifications !== lastCount) {
+                    window.location.reload();
+                }
+            })
+            .catch(function() {});
+    }, 30000);
+})();
+</script>
 {% endblock %}

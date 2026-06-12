@@ -1,0 +1,382 @@
+/* RVUverse - Main Stylesheet */
+
+/* ========= Variables ========= */
+:root {
+    --primary-color: #0F2557; /* Deeper Navy Blue */
+    --secondary-color: #1A365D; /* Dark Blue for secondary elements */
+    --accent-color: #2563EB; /* Bright Blue for accents */
+    --dark-color: #0B1838; /* Very Dark Blue */
+    --light-color: #EEF2FF; /* Very Light Blue tint */
+    --border-color: #CBD5E1; /* Light Blue Gray */
+    --success-color: #0D9488; /* Teal with blue undertone */
+    --danger-color: #DC2626; /* Red */
+    --warning-color: #F59E0B; /* Amber */
+    
+    /* RVU colors - Enhanced Dark Blue themed colors */
+    --rvu-primary: #0F2557; /* Deep Navy Blue */
+    --rvu-secondary: #1E3A8A; /* Navy Blue */
+    --rvu-accent: #2563EB; /* Bright Blue - complementary */
+}
+
+/* ========= Global Styles ========= */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #F0F4FF; /* Light blue tinted background */
+    color: #0F172A; /* Darker text for better contrast */
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+}
+
+a {
+    color: var(--primary-color);
+    transition: color 0.2s;
+}
+
+a:hover {
+    color: #0C2D6B; /* Darker navy blue */
+}
+
+.text-muted {
+    color: var(--secondary-color) !important;
+}
+
+.btn {
+    border-radius: 5px;
+    font-weight: 500;
+}
+
+.btn-primary {
+    background-color: var(--rvu-primary);
+    border-color: var(--rvu-primary);
+}
+
+.btn-primary:hover {
+    background-color: #0C2D6B; /* Darker navy blue */
+    border-color: #092152;
+}
+
+/* Adjust info button to use blue accent color */
+.btn-info, .bg-info {
+    background-color: var(--rvu-accent) !important;
+    border-color: var(--rvu-accent) !important;
+    color: #fff !important;
+}
+
+.navbar {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background-color: var(--rvu-primary) !important; /* Deep navy blue navbar */
+}
+
+.navbar-brand {
+    font-weight: 700;
+    color: #fff;
+}
+
+.navbar-dark .navbar-nav .nav-link {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.navbar-dark .navbar-nav .nav-link:hover {
+    color: #fff;
+}
+
+.card {
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+    overflow: hidden;
+    border-color: #CBD5E1; /* Light blue gray border */
+}
+
+.card-header {
+    font-weight: 600;
+    background-color: rgba(15, 37, 87, 0.03); /* Very subtle blue tint */
+}
+
+.list-group-item {
+    transition: background-color 0.15s ease-in-out;
+}
+
+.list-group-item:hover {
+    background-color: rgba(30, 58, 138, 0.05); /* Light blue background */
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(30, 58, 138, 0.25); /* Blue shadow */
+}
+
+/* ========= Custom Components ========= */
+
+/* Avatar Placeholder */
+.avatar-placeholder {
+    width: 40px;
+    height: 40px;
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.avatar-placeholder.mx-auto {
+    width: 80px;
+    height: 80px;
+    font-size: 32px;
+}
+
+/* Post Card */
+.post-card {
+    transition: transform 0.15s ease-in-out;
+}
+
+.post-card:hover {
+    transform: translateY(-2px);
+}
+
+/* Hashtags */
+.hashtags .badge {
+    font-weight: 500;
+    padding: 5px 10px;
+    margin-right: 5px;
+    background-color: var(--secondary-color);
+    transition: background-color 0.2s;
+}
+
+.hashtags .badge:hover {
+    background-color: var(--primary-color);
+}
+
+/* Like/Comment Buttons */
+.like-btn, .like-btn-active {
+    min-width: 60px;
+    transition: all 0.2s;
+}
+
+.like-btn-active {
+    transform: scale(1.05);
+}
+
+/* Messages */
+.message-content {
+    border-radius: 18px;
+    padding: 10px 15px;
+    margin-bottom: 10px;
+    max-width: 75%;
+}
+
+.message.sent {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.message.received {
+    display: flex;
+    justify-content: flex-start;
+}
+
+/* Notifications */
+.notification-text {
+    font-weight: 500;
+}
+
+/* ========= Responsive Adjustments ========= */
+@media (max-width: 768px) {
+    .card {
+        margin-bottom: 15px;
+    }
+    
+    .avatar-placeholder.mx-auto {
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
+    }
+    
+    .message-content {
+        max-width: 85%;
+    }
+}
+
+/* ========= Utility Classes ========= */
+.border-bottom-light {
+    border-bottom: 1px solid var(--border-color);
+}
+
+.bg-light-hover:hover {
+    background-color: #f8f9fa;
+}
+
+/* Page header styling */
+.page-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* Footer styling */
+footer {
+    margin-top: auto;
+    background-color: #0F2557; /* Deep navy blue footer */
+    padding: 20px 0;
+    color: #fff;
+}
+
+footer a {
+    color: #90CAF9; /* Light blue for footer links */
+}
+
+footer a:hover {
+    color: #E3F2FD; /* Very light blue on hover */
+    text-decoration: none;
+}
+
+/* ========= Animation ========= */
+.fade-in {
+    animation: fadeIn 0.5s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Post interaction styling */
+.post-interaction {
+    padding: 8px 0;
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid var(--border-color);
+    background-color: rgba(15, 37, 87, 0.02); /* Very subtle blue background */
+}
+
+/* Comment styling */
+.comment-item {
+    padding: 10px 0;
+}
+
+.comment-item:not(:last-child) {
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* Profile card styling */
+.profile-stats {
+    padding: 15px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.profile-stats h5 {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+/* Messages container styling */
+#messagesContainer {
+    padding: 15px;
+    background-color: #EDF2F7; /* Light blue-gray background */
+    border-radius: 8px;
+    border: 1px solid #CBD5E1; /* Light blue-gray border */
+}
+
+/* Form element styling */
+textarea.form-control {
+    resize: none;
+}
+
+/* Utility for clickable elements */
+.clickable {
+    cursor: pointer;
+}
+
+/* Department badge styling */
+.department-badge {
+    background-color: #E0F2FE; /* Light blue background */
+    color: #0F2557; /* Dark navy text */
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border: 1px solid #BAE6FD; /* Slightly darker blue border */
+}
+
+/* Override bootstrap pagination colors */
+.page-item.active .page-link {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.page-link {
+    color: var(--primary-color);
+}
+
+.page-link:hover {
+    color: #0C2D6B; /* Darker blue */
+}
+
+/* Update bg-primary and text-primary classes */
+.bg-primary {
+    background-color: var(--rvu-primary) !important;
+}
+
+.text-primary {
+    color: var(--rvu-primary) !important;
+}
+
+/* Update card border colors */
+.card.border-primary {
+    border-color: var(--rvu-primary) !important;
+}
+
+.card.border-info {
+    border-color: var(--rvu-accent) !important;
+}
+
+/* ========= Event Specific Styles ========= */
+
+/* Event card image height */
+.event-card-img {
+    height: 180px;
+    object-fit: cover;
+    object-position: center;
+}
+
+/* Event detail image height */
+.event-detail-img {
+    max-height: 400px;
+    object-fit: cover;
+    object-position: center;
+}
+
+/* Event card hover */
+.hover-shadow {
+    transition: all 0.3s ease;
+}
+
+.hover-shadow:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Event status badges */
+.badge.bg-upcoming {
+    background-color: var(--rvu-accent);
+}
+
+.badge.bg-ongoing {
+    background-color: var(--success-color);
+}
+
+.badge.bg-completed {
+    background-color: var(--secondary-color);
+}
+
+.badge.bg-cancelled {
+    background-color: var(--danger-color);
+}

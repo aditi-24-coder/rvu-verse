@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">
+  <!-- Background Circle -->
+  <circle cx="50" cy="50" r="48" fill="#0d6efd" />
+  <circle cx="50" cy="50" r="45" fill="#fff" />
+  <circle cx="50" cy="50" r="40" fill="#0d6efd" />
+  
+  <!-- Book Shape -->
+  <path d="M30 30 V70 Q30 75, 35 75 H75 V30 H35 Q30 30, 30 35" fill="#fff" />
+  
+  <!-- Book Pages -->
+  <path d="M35 30 V70 H75" stroke="#0d6efd" stroke-width="2" fill="none" />
+  
+  <!-- Book Lines -->
+  <line x1="45" y1="40" x2="65" y2="40" stroke="#0d6efd" stroke-width="2" />
+  <line x1="45" y1="50" x2="65" y2="50" stroke="#0d6efd" stroke-width="2" />
+  <line x1="45" y1="60" x2="65" y2="60" stroke="#0d6efd" stroke-width="2" />
+  
+  <!-- RVU Text -->
+  <text x="50" y="88" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#fff">RVU</text>
+  
+  <!-- Connect Circles -->
+  <circle cx="30" cy="40" r="5" fill="#fff" />
+  <circle cx="70" cy="40" r="5" fill="#fff" />
+  
+  <!-- Connect Line -->
+  <path d="M30 40 Q50 25, 70 40" stroke="#fff" stroke-width="2" fill="none" />
+</svg>
