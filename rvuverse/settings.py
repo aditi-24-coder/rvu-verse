@@ -87,8 +87,8 @@ DATABASES = {
     }
 }
 
-# Use PostgreSQL on Render if DATABASE_URL is set
-if os.environ.get('DATABASE_URL'):
+# Use PostgreSQL on Render if DATABASE_URL is set (skip during test execution)
+if os.environ.get('DATABASE_URL') and 'test' not in sys.argv:
     DATABASES['default'] = dj_database_url.config(
         conn_max_age=600,
         conn_health_checks=True,
@@ -120,8 +120,18 @@ USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# Whitenoise storage configuration for static files (Django 4.2+)
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
