@@ -9,9 +9,14 @@ urlpatterns = [
     path('accounts/', include('allauth.urls')),
 ]
 
+from django.urls import re_path
+from django.views.static import serve
+
 # Add media URL patterns in development
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 else:
-    # For production, we still need to serve media files
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    # For production demo, we explicitly serve media files
+    urlpatterns += [
+        re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
+    ]
