@@ -7,6 +7,8 @@ from .models import Profile, Post, Comment, Like, Follow, Message, Notification
 @receiver(post_save, sender=Comment)
 def create_comment_notification(sender, instance, created, **kwargs):
     """Create notification when a comment is added to a post."""
+    if kwargs.get('raw'):
+        return
     if created and instance.user != instance.post.user:
         if not Notification.objects.filter(
             user=instance.post.user,
@@ -26,6 +28,8 @@ def create_comment_notification(sender, instance, created, **kwargs):
 @receiver(post_save, sender=Like)
 def create_like_notification(sender, instance, created, **kwargs):
     """Create notification when a post is liked."""
+    if kwargs.get('raw'):
+        return
     if created and instance.user != instance.post.user:
         if not Notification.objects.filter(
             user=instance.post.user, from_user=instance.user, post=instance.post, notification_type='like'
@@ -41,6 +45,8 @@ def create_like_notification(sender, instance, created, **kwargs):
 @receiver(post_save, sender=Follow)
 def create_follow_notification(sender, instance, created, **kwargs):
     """Create notification when a user follows another user."""
+    if kwargs.get('raw'):
+        return
     if created and instance.follower != instance.following:
         Notification.objects.get_or_create(
             user=instance.following,
@@ -54,6 +60,8 @@ def create_follow_notification(sender, instance, created, **kwargs):
 @receiver(post_save, sender=Message)
 def create_message_notification(sender, instance, created, **kwargs):
     """Create notification when a message is received."""
+    if kwargs.get('raw'):
+        return
     if created and instance.sender != instance.receiver:
         if not Notification.objects.filter(
             user=instance.receiver,
