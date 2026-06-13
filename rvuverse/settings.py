@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 import sys
+import dj_database_url
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -85,6 +86,13 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+# Use PostgreSQL on Render if DATABASE_URL is set
+if os.environ.get('DATABASE_URL'):
+    DATABASES['default'] = dj_database_url.config(
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
 
 
 # Password validation
