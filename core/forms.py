@@ -174,3 +174,34 @@ class SearchForm(forms.Form):
         required=False,
         widget=forms.Select(attrs={'class': 'form-control'})
     )
+
+
+class RVUSocialSignUpForm(forms.Form):
+    """
+    Custom signup form for Google OAuth that validates RVU email addresses.
+    """
+    email = forms.EmailField(
+        max_length=254,
+        required=True,
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control',
+            'readonly': 'readonly',
+            'placeholder': 'Your college email'
+        })
+    )
+    
+    def clean_email(self):
+        """Validate that email is a valid RVU student email."""
+        email = self.cleaned_data.get('email', '').lower()
+        allowed_endings = ['btech22@rvu.edu.in', 'btech23@rvu.edu.in']
+        
+        if not any(email.endswith(ending) for ending in allowed_endings):
+            raise ValidationError(
+                'Only RVU students with valid college email addresses can sign up. '
+                'Please use an email ending with .btech23@rvu.edu.in or .btech22@rvu.edu.in'
+            )
+        
+        if User.objects.filter(email=email).exists():
+            raise ValidationError('A user with that email already exists.')
+        
+        return email

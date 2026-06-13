@@ -1,97 +1,175 @@
-{% extends 'core/base.html' %}
+{% load static %}
+{% load socialaccount %}
 
-{% block title %}RVUverse - Register{% endblock %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RVUverse - Create Account</title>
+    <meta name="description" content="Create your RVUverse account — join the exclusive social platform for RV University students.">
 
-{% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card border-primary">
-            <div class="card-header bg-primary text-white text-center">
-                <h4 class="mb-0">Join RVUverse</h4>
+    <!-- Google Fonts - Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap CSS (for form-control class used by Django form widgets) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}?v=3">
+</head>
+<body>
+    <div class="auth-page">
+        <div class="auth-container">
+            <!-- Logo -->
+            <div class="auth-logo">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                </svg>
+                <span>RVUverse</span>
             </div>
-            <div class="card-body">
-                <div class="text-center mb-4">
-                    <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="text-primary">
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="8.5" cy="7" r="4"></circle>
-                        <path d="M20 8v6"></path>
-                        <path d="M23 11h-6"></path>
+
+            <div class="auth-card">
+                <h1>Create your account</h1>
+                <p class="auth-subtitle">Start connecting with your RVU community</p>
+
+                <!-- Messages -->
+                {% if messages %}
+                    {% for message in messages %}
+                        {% if message.tags == 'error' %}
+                            <div class="auth-alert">
+                                <i class="fa-solid fa-circle-exclamation"></i>
+                                {{ message }}
+                            </div>
+                        {% elif message.tags == 'success' or message.tags == 'info' %}
+                            <div class="auth-alert auth-alert-success">
+                                <i class="fa-solid fa-circle-check"></i>
+                                {{ message }}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+
+                <!-- Google OAuth Button -->
+                <a href="{% provider_login_url 'google' %}" class="btn-google" id="googleSignUpBtn">
+                    <svg class="google-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                     </svg>
-                    <h5 class="mt-3">Create your account</h5>
-                    <p class="text-muted">Connect with your college community</p>
+                    Continue with Google
+                </a>
+
+                <p class="auth-email-hint">Use your RVU college email (@rvu.edu.in)</p>
+
+                <!-- Divider -->
+                <div class="auth-divider">
+                    <span>or continue with email</span>
                 </div>
-                
-                <form method="post" action="{% url 'register' %}">
+
+                <!-- Registration Form -->
+                <form method="post" action="{% url 'register' %}" id="registerForm">
                     {% csrf_token %}
-                    
-                    <div class="mb-3">
-                        <label for="{{ form.username.id_for_label }}" class="form-label">Username</label>
-                        {{ form.username }}
+
+                    <div class="auth-field">
+                        <label for="id_username">Username</label>
+                        <div class="auth-input-wrapper">
+                            <i class="fa-solid fa-user input-icon"></i>
+                            <input type="text" name="username" id="id_username" placeholder="Choose a username" class="form-control" value="{{ form.username.value|default:'' }}" required autofocus>
+                        </div>
                         {% if form.username.errors %}
-                        <div class="text-danger">
-                            {{ form.username.errors }}
-                        </div>
+                            <div class="auth-field-error">
+                                <i class="fa-solid fa-circle-exclamation"></i>
+                                {{ form.username.errors.0 }}
+                            </div>
                         {% endif %}
-                        <div class="form-text">{{ form.username.help_text }}</div>
+                        <div class="auth-help-text">Letters, digits and @/./+/-/_ only.</div>
                     </div>
-                    
-                    <div class="mb-3">
-                        <label for="{{ form.email.id_for_label }}" class="form-label">College Email</label>
-                        {{ form.email }}
+
+                    <div class="auth-field">
+                        <label for="id_email">College Email</label>
+                        <div class="auth-input-wrapper">
+                            <i class="fa-solid fa-envelope input-icon"></i>
+                            <input type="email" name="email" id="id_email" placeholder="you@btech23.rvu.edu.in" class="form-control" value="{{ form.email.value|default:'' }}" required>
+                        </div>
                         {% if form.email.errors %}
-                        <div class="text-danger">
-                            {{ form.email.errors }}
-                        </div>
+                            <div class="auth-field-error">
+                                <i class="fa-solid fa-circle-exclamation"></i>
+                                {{ form.email.errors.0 }}
+                            </div>
                         {% endif %}
-                        <div class="form-text">{{ form.email.help_text }}</div>
+                        <div class="auth-help-text">Must end with btech22@rvu.edu.in, btech23@rvu.edu.in, or btech24@rvu.edu.in</div>
                     </div>
-                    
-                    <div class="mb-3">
-                        <label for="{{ form.password1.id_for_label }}" class="form-label">Password</label>
-                        {{ form.password1 }}
+
+                    <div class="auth-field">
+                        <label for="id_password1">Password</label>
+                        <div class="auth-input-wrapper">
+                            <i class="fa-solid fa-lock input-icon"></i>
+                            <input type="password" name="password1" id="id_password1" placeholder="Create a password" class="form-control" required>
+                            <button type="button" class="password-toggle" onclick="togglePassword('id_password1', this)" aria-label="Toggle password visibility">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
                         {% if form.password1.errors %}
-                        <div class="text-danger">
-                            {{ form.password1.errors }}
-                        </div>
+                            <div class="auth-field-error">
+                                <i class="fa-solid fa-circle-exclamation"></i>
+                                {{ form.password1.errors.0 }}
+                            </div>
                         {% endif %}
-                        <div class="form-text">{{ form.password1.help_text }}</div>
+                        <div class="auth-help-text">At least 8 characters, not too common.</div>
                     </div>
-                    
-                    <div class="mb-3">
-                        <label for="{{ form.password2.id_for_label }}" class="form-label">Confirm Password</label>
-                        {{ form.password2 }}
+
+                    <div class="auth-field">
+                        <label for="id_password2">Confirm Password</label>
+                        <div class="auth-input-wrapper">
+                            <i class="fa-solid fa-lock input-icon"></i>
+                            <input type="password" name="password2" id="id_password2" placeholder="Confirm your password" class="form-control" required>
+                            <button type="button" class="password-toggle" onclick="togglePassword('id_password2', this)" aria-label="Toggle password visibility">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
                         {% if form.password2.errors %}
-                        <div class="text-danger">
-                            {{ form.password2.errors }}
-                        </div>
+                            <div class="auth-field-error">
+                                <i class="fa-solid fa-circle-exclamation"></i>
+                                {{ form.password2.errors.0 }}
+                            </div>
                         {% endif %}
-                        <div class="form-text">{{ form.password2.help_text }}</div>
                     </div>
-                    
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fa-solid fa-user-plus me-2"></i>Register
-                        </button>
-                    </div>
+
+                    <button type="submit" class="btn btn-auth-submit" id="createAccountBtn">
+                        Create Account
+                    </button>
                 </form>
-                
-                <div class="text-center mt-4">
-                    <p>Already have an account? <a href="{% url 'login' %}" class="text-decoration-none">Login</a></p>
+
+                <!-- Footer Link -->
+                <div class="auth-footer">
+                    Already have an account? <a href="{% url 'login' %}">Sign in</a>
                 </div>
-            </div>
-        </div>
-        
-        <div class="card mt-4">
-            <div class="card-body">
-                <h5 class="card-title">Registration Information</h5>
-                <p class="card-text">
-                    To join RVUverse, you must use your official RV University email address that ends with @rvu.edu.in.
-                </p>
-                <p class="card-text text-muted">
-                    <small>This platform is exclusively for RV University students to ensure a secure and authentic community experience.</small>
-                </p>
             </div>
         </div>
     </div>
-</div>
-{% endblock %}
+
+    <script>
+        function togglePassword(inputId, toggleBtn) {
+            const input = document.getElementById(inputId);
+            const icon = toggleBtn.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -83,6 +83,46 @@
             </div>
             <div class="card-body">
                 {% if search_performed %}
+                    <!-- Display matching users at the top if they exist and search_type is not users -->
+                    {% if matching_users %}
+                        <div class="mb-4">
+                            <h6 class="text-uppercase text-muted fw-bold mb-3" style="font-size: 0.85rem; letter-spacing: 0.5px;">
+                                <i class="fa-solid fa-users me-1 text-primary"></i> Matching Users
+                            </h6>
+                            <div class="row row-cols-1 row-cols-md-2 g-3">
+                                {% for user_result in matching_users %}
+                                <div class="col">
+                                    <div class="card h-100 shadow-sm border-light">
+                                        <div class="card-body p-3">
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-placeholder me-3" style="width: 38px; height: 38px; font-size: 15px; border-radius: 50%; background-color: var(--primary-color); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                                                    {{ user_result.username.0|upper }}
+                                                </div>
+                                                <div class="flex-grow-1 min-w-0">
+                                                    <h6 class="mb-0 text-truncate">
+                                                        <a href="{% url 'user_profile' username=user_result.username %}" class="text-decoration-none fw-bold text-dark">
+                                                            {{ user_result.username }}
+                                                        </a>
+                                                    </h6>
+                                                    {% if user_result.profile.department %}
+                                                    <small class="text-muted d-block text-truncate">{{ user_result.profile.department.name }}</small>
+                                                    {% endif %}
+                                                </div>
+                                                <div>
+                                                    <a href="{% url 'user_profile' username=user_result.username %}" class="btn btn-sm btn-outline-primary py-1 px-2" style="font-size: 0.75rem;">
+                                                        View Profile
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <hr class="my-4">
+                        </div>
+                    {% endif %}
+
                     {% if results %}
                         <!-- If searching for users -->
                         {% if form.cleaned_data.search_type == 'users' %}
@@ -120,6 +160,40 @@
                                 {% endfor %}
                             </div>
                         
+                        <!-- If searching for events -->
+                        {% elif form.cleaned_data.search_type == 'events' %}
+                            <div class="row row-cols-1 row-cols-md-2 g-4">
+                                {% for event in results %}
+                                <div class="col">
+                                    <div class="card h-100 shadow-sm">
+                                        <div class="card-body">
+                                            <h5 class="card-title">
+                                                <a href="{% url 'event_detail' event_id=event.id %}" class="text-decoration-none text-dark fw-bold">
+                                                    {{ event.title }}
+                                                </a>
+                                            </h5>
+                                            <p class="card-text text-muted mb-2" style="font-size: 0.85rem;">
+                                                <small>
+                                                    <i class="fa-solid fa-user"></i> 
+                                                    Organizer: <a href="{% url 'user_profile' username=event.organizer.username %}" class="text-decoration-none fw-semibold">{{ event.organizer.username }}</a>
+                                                    {% if event.department %}
+                                                    | <i class="fa-solid fa-building-columns"></i> {{ event.department.name }}
+                                                    {% endif %}
+                                                </small>
+                                            </p>
+                                            <p class="card-text small text-muted">{{ event.description|truncatechars:120 }}</p>
+                                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                                <span class="badge {% if event.status == 'upcoming' %}bg-primary{% elif event.status == 'ongoing' %}bg-success{% elif event.status == 'completed' %}bg-secondary{% else %}bg-danger{% endif %}">
+                                                    {{ event.get_status_display }}
+                                                </span>
+                                                <a href="{% url 'event_detail' event_id=event.id %}" class="btn btn-sm btn-outline-primary">View Details</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+
                         <!-- If searching for posts or hashtags -->
                         {% else %}
                             <div class="list-group mb-4">
@@ -170,7 +244,7 @@
                             </div>
                         {% endif %}
                         
-                    {% else %}
+                    {% elif not matching_users %}
                         <div class="text-center py-5">
                             <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="text-muted mb-3">
                                 <circle cx="11" cy="11" r="8"></circle>

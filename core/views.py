@@ -26,7 +26,10 @@ from .models import (
 def login_view(request):
     if request.user.is_authenticated:
         return redirect('home')
-        
+    
+    # Retrieve and clear Google Auth failed email from session (if any)
+    google_auth_failed_email = request.session.pop('google_auth_failed_email', None)
+    
     if request.method == 'POST':
         form = CustomAuthenticationForm(request, data=request.POST)
         if form.is_valid():
@@ -42,7 +45,10 @@ def login_view(request):
     else:
         form = CustomAuthenticationForm()
     
-    return render(request, 'core/login.html', {'form': form})
+    return render(request, 'core/login.html', {
+        'form': form,
+        'google_auth_failed_email': google_auth_failed_email,
+    })
 
 def register_view(request):
     if request.user.is_authenticated:
@@ -367,6 +373,7 @@ def notifications_view(request):
 @login_required
 def search_view(request):
     results = []
+    matching_users = []
     search_performed = False
     
     if request.method == 'GET' and 'query' in request.GET:
@@ -378,6 +385,19 @@ def search_view(request):
             search_type = form.cleaned_data.get('search_type')
             department = form.cleaned_data.get('department')
             study_year = form.cleaned_data.get('study_year')
+            
+            # If search_type is not users, we also want to display matching users at the top
+            if search_type != 'users':
+                matching_users = User.objects.filter(
+                    Q(username__icontains=query) | 
+                    Q(first_name__icontains=query) | 
+                    Q(last_name__icontains=query)
+                ).select_related('profile')
+                if department:
+                    matching_users = matching_users.filter(profile__department=department)
+                if study_year:
+                    matching_users = matching_users.filter(profile__study_year=study_year)
+                matching_users = matching_users[:5]  # Limit to top 5
             
             if search_type == 'posts':
                 # Search for posts
@@ -433,6 +453,7 @@ def search_view(request):
     context = {
         'form': form,
         'results': results,
+        'matching_users': matching_users,
         'search_performed': search_performed,
     }
     
