@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RVUverse – System Architecture</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap"
+    rel="stylesheet" />
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* ── Theme tokens ── */
+    :root[data-theme="dark"] {
+      --bg: #0f1117;
+      --surface: #161b27;
+      --card: #1c2333;
+      --border: #2a3347;
+      --border-hover: #3b4d6a;
+      --text-primary: #d4dae6;
+      --text-secondary: #8b96ac;
+      --text-dim: #4e5a72;
+      --accent: #4f7cac;
+      --accent-soft: #2d4a6e;
+      --accent2: #6b7fc4;
+      --accent2-soft: #2a3560;
+      --accent3: #4a9d8e;
+      --accent3-soft: #1e3d38;
+      --accent4: #5a9966;
+      --accent4-soft: #1e3325;
+      --accent5: #9c8060;
+      --accent5-soft: #3a2e1e;
+      --accent6: #9e5a5a;
+      --accent6-soft: #3a1e1e;
+      --tag-bg: rgba(79, 124, 172, 0.12);
+      --shadow: rgba(0, 0, 0, 0.35);
+      --toggle-bg: #1c2333;
+    }
+
+    :root[data-theme="light"] {
+      --bg: #f4f6f9;
+      --surface: #ffffff;
+      --card: #ffffff;
+      --border: #d1d9e6;
+      --border-hover: #a8b8d0;
+      --text-primary: #1a2236;
+      --text-secondary: #4a5568;
+      --text-dim: #94a3b8;
+      --accent: #2563a8;
+      --accent-soft: #dbeafe;
+      --accent2: #4a5aac;
+      --accent2-soft: #eef0ff;
+      --accent3: #0d7a6e;
+      --accent3-soft: #d0f4f1;
+      --accent4: #2e7d44;
+      --accent4-soft: #dcf5e4;
+      --accent5: #7c5a2a;
+      --accent5-soft: #fef3e2;
+      --accent6: #9b2a2a;
+      --accent6-soft: #fee2e2;
+      --tag-bg: rgba(37, 99, 168, 0.08);
+      --shadow: rgba(0, 0, 0, 0.10);
+      --toggle-bg: #e8edf5;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    /* ── Top bar with toggle ── */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .topbar-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      letter-spacing: 0.5px;
+    }
+
+    .topbar-title span {
+      color: var(--accent);
+    }
+
+    /* Toggle switch */
+    .toggle-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .toggle {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      cursor: pointer;
+    }
+
+    .toggle input {
+      display: none;
+    }
+
+    .toggle-track {
+      position: absolute;
+      inset: 0;
+      border-radius: 12px;
+      background: var(--toggle-bg);
+      border: 1px solid var(--border);
+      transition: background 0.25s, border-color 0.25s;
+    }
+
+    .toggle input:checked+.toggle-track {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+    }
+
+    .toggle-thumb {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--text-secondary);
+      transition: transform 0.25s, background 0.25s;
+    }
+
+    .toggle input:checked~.toggle-thumb {
+      transform: translateX(20px);
+      background: var(--accent);
+    }
+
+    .toggle-icon {
+      font-size: 14px;
+    }
+
+    /* ── Main container ── */
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 40px 28px 72px;
+    }
+
+    /* ── Header ── */
+    header {
+      margin-bottom: 44px;
+    }
+
+    .header-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--accent-soft);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      font-size: clamp(22px, 4vw, 36px);
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    /* ── Legend ── */
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-bottom: 40px;
+      padding: 14px 18px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 11px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* ── Layer ── */
+    .arch-diagram {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .layer {
+      padding: 24px 20px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--card);
+      position: relative;
+      transition: border-color 0.25s;
+    }
+
+    .layer:hover {
+      border-color: var(--border-hover);
+    }
+
+    .layer-label {
+      position: absolute;
+      top: -11px;
+      left: 20px;
+      background: var(--card);
+      padding: 1px 12px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+
+    /* ── Arrow connector ── */
+    .arrow-connector {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 6px 0;
+    }
+
+    .arrow-line {
+      width: 1px;
+      height: 22px;
+      background: var(--border);
+    }
+
+    .arrow-label {
+      font-size: 10px;
+      color: var(--text-dim);
+      font-family: 'Fira Code', monospace;
+      background: var(--card);
+      padding: 2px 10px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      white-space: nowrap;
+      max-width: 90%;
+      text-align: center;
+    }
+
+    .arrow-head {
+      width: 0;
+      height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 6px solid var(--border);
+    }
+
+    /* ── Nodes ── */
+    .nodes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      align-items: stretch;
+    }
+
+    .node {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 18px;
+      min-width: 150px;
+      flex: 1;
+      max-width: 230px;
+      transition: border-color 0.25s, box-shadow 0.25s;
+    }
+
+    .node:hover {
+      border-color: var(--border-hover);
+      box-shadow: 0 4px 16px var(--shadow);
+    }
+
+    .node-icon {
+      font-size: 16px;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .node-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    .node-desc {
+      font-size: 11px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .node-badge {
+      display: inline-block;
+      margin-top: 8px;
+      font-size: 10px;
+      font-family: 'Fira Code', monospace;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    /* coloured variants — border only, muted */
+    .node-blue {
+      border-left: 3px solid var(--accent);
+    }
+
+    .node-purple {
+      border-left: 3px solid var(--accent2);
+    }
+
+    .node-teal {
+      border-left: 3px solid var(--accent3);
+    }
+
+    .node-green {
+      border-left: 3px solid var(--accent4);
+    }
+
+    .node-orange {
+      border-left: 3px solid var(--accent5);
+    }
+
+    .node-pink {
+      border-left: 3px solid var(--accent6);
+    }
+
+    .badge-blue {
+      background: var(--accent-soft);
+      color: var(--accent);
+      border: 1px solid var(--accent);
+    }
+
+    .badge-purple {
+      background: var(--accent2-soft);
+      color: var(--accent2);
+      border: 1px solid var(--accent2);
+    }
+
+    .badge-teal {
+      background: var(--accent3-soft);
+      color: var(--accent3);
+      border: 1px solid var(--accent3);
+    }
+
+    .badge-green {
+      background: var(--accent4-soft);
+      color: var(--accent4);
+      border: 1px solid var(--accent4);
+    }
+
+    .badge-orange {
+      background: var(--accent5-soft);
+      color: var(--accent5);
+      border: 1px solid var(--accent5);
+    }
+
+    .badge-pink {
+      background: var(--accent6-soft);
+      color: var(--accent6);
+      border: 1px solid var(--accent6);
+    }
+
+    /* Subgroups inside layers */
+    .subgroup {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      flex: 1;
+    }
+
+    .subgroup-title {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 10px;
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .tag {
+      font-size: 10px;
+      font-family: 'Fira Code', monospace;
+      padding: 2px 8px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: var(--tag-bg);
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    /* ── Section heading ── */
+    .section-heading {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      text-align: center;
+      margin-bottom: 24px;
+      padding-top: 8px;
+    }
+
+    /* ── Flow steps ── */
+    .flow-section {
+      margin-top: 48px;
+    }
+
+    .flow-steps {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .flow-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 7px;
+      min-width: 100px;
+    }
+
+    .flow-bubble {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      position: relative;
+      transition: border-color 0.25s;
+    }
+
+    .flow-bubble:hover {
+      border-color: var(--accent);
+    }
+
+    .flow-num {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      font-size: 8px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--accent);
+      color: var(--bg);
+    }
+
+    .flow-text {
+      font-size: 10px;
+      text-align: center;
+      color: var(--text-secondary);
+      font-weight: 500;
+      max-width: 85px;
+      line-height: 1.4;
+    }
+
+    .flow-arrow {
+      width: 20px;
+      height: 1px;
+      background: var(--border);
+      position: relative;
+      flex-shrink: 0;
+      margin-bottom: 22px;
+    }
+
+    .flow-arrow::after {
+      content: '';
+      position: absolute;
+      right: -1px;
+      top: -3px;
+      width: 0;
+      height: 0;
+      border-top: 4px solid transparent;
+      border-bottom: 4px solid transparent;
+      border-left: 6px solid var(--border);
+    }
+
+    /* ── Auth flow ── */
+    .auth-flow-wrap {
+      margin-top: 40px;
+    }
+
+    /* ── CI/CD pipeline ── */
+    .cicd-section {
+      margin-top: 48px;
+    }
+
+    .pipeline {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .pipeline-stage {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 18px;
+      min-width: 118px;
+      text-align: center;
+      transition: border-color 0.25s;
+    }
+
+    .pipeline-stage:hover {
+      border-color: var(--border-hover);
+    }
+
+    .pipeline-icon {
+      font-size: 16px;
+      margin-bottom: 7px;
+      display: block;
+    }
+
+    .pipeline-name {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 3px;
+    }
+
+    .pipeline-detail {
+      font-size: 10px;
+      color: var(--text-secondary);
+    }
+
+    .pipeline-arrow {
+      width: 20px;
+      height: 1px;
+      background: var(--border);
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .pipeline-arrow::after {
+      content: '';
+      position: absolute;
+      right: -1px;
+      top: -3px;
+      border-top: 4px solid transparent;
+      border-bottom: 4px solid transparent;
+      border-left: 6px solid var(--border);
+    }
+
+    /* ── DB Schema ── */
+    .schema-section {
+      margin-top: 48px;
+    }
+
+    .schema-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+    }
+
+    .schema-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: border-color 0.25s;
+    }
+
+    .schema-card:hover {
+      border-color: var(--border-hover);
+    }
+
+    .schema-header {
+      padding: 9px 13px;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      color: var(--text-primary);
+    }
+
+    .schema-body {
+      padding: 10px 13px 12px;
+    }
+
+    .schema-field {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 3px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 10px;
+    }
+
+    .schema-field:last-child {
+      border-bottom: none;
+    }
+
+    .field-name {
+      font-family: 'Fira Code', monospace;
+      color: var(--text-primary);
+    }
+
+    .field-type {
+      color: var(--text-dim);
+      font-size: 9px;
+    }
+
+    .field-key {
+      font-size: 8px;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-weight: 700;
+      background: var(--accent5-soft);
+      color: var(--accent5);
+      border: 1px solid var(--accent5);
+    }
+
+    .field-key.fk {
+      background: var(--accent-soft);
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .field-uq {
+      font-size: 9px;
+      color: var(--accent5);
+      font-family: 'Fira Code', monospace;
+    }
+
+    /* ── Tech stack ── */
+    .tech-section {
+      margin-top: 48px;
+    }
+
+    .tech-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .tech-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      transition: border-color 0.25s, color 0.25s;
+    }
+
+    .tech-pill:hover {
+      border-color: var(--accent);
+      color: var(--text-primary);
+    }
+
+    .tech-pill-icon {
+      font-size: 13px;
+    }
+
+    /* ── Divider ── */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 48px 0 0;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ── Top bar ── -->
+  <div class="topbar">
+    <div class="topbar-title">
+      <span>RVUverse</span> · System Architecture
+    </div>
+    <div class="toggle-wrap">
+      <span class="toggle-icon">☀️</span>
+      <label class="toggle">
+        <input type="checkbox" id="themeToggle" />
+        <div class="toggle-track"></div>
+        <div class="toggle-thumb"></div>
+      </label>
+      <span class="toggle-icon">🌙</span>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- ── Header ── -->
+    <header>
+      <div class="header-badge">Architecture Overview</div>
+      <h1>RVUverse: System Architecture & Workflow</h1>
+      <p class="subtitle">College-Exclusive Social Media Platform</p>
+    </header>
+
+
+
+    <!-- ════════ ARCHITECTURE LAYERS ════════ -->
+    <div class="arch-diagram">
+
+      <!-- ① CLIENT -->
+      <div class="layer" style="border-top: 2px solid var(--accent)">
+        <div class="layer-label" style="color:var(--accent)">① Client Layer</div>
+        <div class="nodes">
+          <div class="node node-blue">
+            <span class="node-icon">🌐</span>
+            <div class="node-title">Web Browser</div>
+            <div class="node-desc">Student accesses via browser</div>
+          </div>
+
+        </div>
+      </div>
+
+
+      <div class="arrow-connector">
+        <div class="arrow-line"></div>
+        <div class="arrow-label">Open https://rvu-verse.onrender.com/</div>
+        <div class="arrow-line"></div>
+        <div class="arrow-head"></div>
+      </div>
+
+      <!-- ④ URL ROUTING -->
+      <div class="layer" style="border-top: 2px solid var(--accent)">
+        <div class="layer-label" style="color:var(--accent)">④ URL Routing (urls.py)</div>
+        <div class="nodes">
+          <div class="node node-blue">
+            <span class="node-icon">🔑</span>
+            <div class="node-title">Auth Routes</div>
+            <div class="node-desc">/login/ · /register/ · /logout/</div>
+            <div class="node-badge badge-blue">HTML Response</div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="arrow-connector">
+        <div class="arrow-line"></div>
+        <div class="arrow-label">@login_required · Login valid</div>
+        <div class="arrow-line"></div>
+        <div class="arrow-head"></div>
+      </div>
+
+      <!-- ⑤ BUSINESS LOGIC -->
+      <div class="layer" style="border-top: 2px solid var(--accent3)">
+        <div class="layer-label" style="color:var(--accent3)">⑤ Business Logic (views.py + forms.py)</div>
+        <div class="nodes">
+          <div class="node node-teal">
+            <span class="node-icon">🔑</span>
+            <div class="node-title">Auth Views</div>
+            <div class="node-desc">login_view · register_view · logout_view</div>
+            <div class="node-badge badge-teal">Django Auth + allauth</div>
+          </div>
+          <div class="node node-teal">
+            <span class="node-icon">👤</span>
+            <div class="node-title">Profile &amp; Users</div>
+            <div class="node-desc">user_profile · edit_profile · search_view</div>
+            <div class="node-badge badge-teal">ProfileForm</div>
+          </div>
+          <div class="node node-teal">
+            <span class="node-icon">📝</span>
+            <div class="node-title">Posts &amp; Feed</div>
+            <div class="node-desc">home_view · create_post · edit_post · delete_post · post_detail</div>
+            <div class="node-badge badge-teal">PostForm · Paginator(10)</div>
+          </div>
+          <div class="node node-teal">
+            <span class="node-icon">❤️</span>
+            <div class="node-title">Social Actions</div>
+            <div class="node-desc">like_post · unlike_post · follow_user · unfollow_user</div>
+            <div class="node-badge badge-teal">@require_POST</div>
+          </div>
+          <div class="node node-teal">
+            <span class="node-icon">📅</span>
+            <div class="node-title">Events</div>
+            <div class="node-desc">events_view · create_event · event_detail · register_for_event</div>
+            <div class="node-badge badge-teal">EventForm</div>
+          </div>
+          <div class="node node-teal">
+            <span class="node-icon">💬</span>
+            <div class="node-title">Messaging</div>
+            <div class="node-desc">messages_view — mutual-follow gated DM, 15s JS polling</div>
+            <div class="node-badge badge-teal">MessageForm</div>
+          </div>
+          <div class="node node-teal">
+            <span class="node-icon">🔔</span>
+            <div class="node-title">Notifications</div>
+            <div class="node-desc">notifications_view · badge_counts — paginated (20/page)</div>
+            <div class="node-badge badge-teal">is_read flag</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="arrow-connector">
+        <div class="arrow-line"></div>
+        <div class="arrow-label">Django ORM → SQL queries (SELECT / INSERT / UPDATE / DELETE)</div>
+        <div class="arrow-line"></div>
+        <div class="arrow-head"></div>
+      </div>
+
+      <!-- ⑥ DATA LAYER -->
+      <div class="layer" style="border-top: 2px solid var(--accent4)">
+        <div class="layer-label" style="color:var(--accent4)">⑥ Data Layer (models.py)</div>
+        <div class="nodes">
+          <div class="node node-green">
+            <span class="node-icon">🏫</span>
+            <div class="node-title">Department</div>
+            <div class="node-desc">9 RVU schools (SOCSE, SOLAS, SODI…)</div>
+            <div class="node-badge badge-green">9 records</div>
+          </div>
+          <div class="node node-green">
+            <span class="node-icon">👤</span>
+            <div class="node-title">User + Profile</div>
+            <div class="node-desc">OneToOne · bio · dept · year · last_activity</div>
+            <div class="node-badge badge-green">1:1</div>
+          </div>
+          <div class="node node-green">
+            <span class="node-icon">📄</span>
+            <div class="node-title">Post</div>
+            <div class="node-desc">content · image · hashtags · department FK</div>
+            <div class="node-badge badge-green">ManyToOne</div>
+          </div>
+          <div class="node node-green">
+            <span class="node-icon">💬</span>
+            <div class="node-title">Comment</div>
+            <div class="node-desc">user FK + post FK · ordered by created_at</div>
+            <div class="node-badge badge-green">ManyToOne</div>
+          </div>
+          <div class="node node-green">
+            <span class="node-icon">❤️</span>
+            <div class="node-title">Like</div>
+            <div class="node-desc">unique_together (user, post) — prevents duplicates</div>
+            <div class="node-badge badge-green">Composite UNIQUE</div>
+          </div>
+          <div class="node node-green">
+            <span class="node-icon">🔗</span>
+            <div class="node-title">Follow</div>
+            <div class="node-desc">follower FK + following FK, unique_together, self-referencing</div>
+            <div class="node-badge badge-green">Self-referencing</div>
+          </div>
+          <div class="node node-green">
+            <span class="node-icon">✉️</span>
+            <div class="node-title">Message</div>
+            <div class="node-desc">sender + receiver FK · is_read · mutual-follow gated</div>
+            <div class="node-badge badge-green">1:1 DM only</div>
+          </div>
+          <div class="node node-green">
+            <span class="node-icon">📅</span>
+            <div class="node-title">Event</div>
+            <div class="node-desc">title · dates · status · image · + Reg / Likes / Comments</div>
+          </div>
+          <div class="node node-green">
+            <span class="node-icon">🔔</span>
+            <div class="node-title">Notification</div>
+            <div class="node-desc">6 types · from_user · post / event / message FKs · is_read</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="arrow-connector">
+        <div class="arrow-line"></div>
+        <div class="arrow-label">Django post_save signals fire automatically after ORM writes</div>
+        <div class="arrow-line"></div>
+        <div class="arrow-head"></div>
+      </div>
+
+      <!-- ⑦ SIGNALS -->
+      <div class="layer" style="border-top: 2px solid var(--accent5)">
+        <div class="layer-label" style="color:var(--accent5)">⑦ Signals &amp; Auto-Events (signals.py)</div>
+        <div class="nodes">
+          <div class="node node-orange">
+            <span class="node-icon">🔔</span>
+            <div class="node-title">Like Signal</div>
+            <div class="node-desc">post_save(Like) → create_like_notification</div>
+          </div>
+          <div class="node node-orange">
+            <span class="node-icon">💬</span>
+            <div class="node-title">Comment Signal</div>
+            <div class="node-desc">post_save(Comment) → create_comment_notification</div>
+          </div>
+          <div class="node node-orange">
+            <span class="node-icon">👥</span>
+            <div class="node-title">Follow Signal</div>
+            <div class="node-desc">post_save(Follow) → create_follow_notification</div>
+          </div>
+          <div class="node node-orange">
+            <span class="node-icon">✉️</span>
+            <div class="node-title">Message Signal</div>
+            <div class="node-desc">post_save(Message) → create_message_notification</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="arrow-connector">
+        <div class="arrow-line"></div>
+        <div class="arrow-label">Dev: SQLite3 (db.sqlite3) · Production: PostgreSQL (Render managed)</div>
+        <div class="arrow-line"></div>
+        <div class="arrow-head"></div>
+      </div>
+
+      <!-- ⑧ DATABASE -->
+      <div class="layer" style="border-top: 2px solid var(--accent4)">
+        <div class="layer-label" style="color:var(--accent4)">⑧ Database</div>
+        <div class="nodes" style="justify-content:center">
+          <div class="node node-green" style="max-width:260px;text-align:center">
+            <span class="node-icon">🗃️</span>
+            <div class="node-title">SQLite 3 — Development</div>
+            <div class="node-desc">File-based, zero-config, Python built-in. Overridden if DATABASE_URL is set.</div>
+            <div class="node-badge badge-green">db.sqlite3</div>
+          </div>
+          <div class="node node-green" style="max-width:260px;text-align:center">
+            <span class="node-icon">🐘</span>
+            <div class="node-title">PostgreSQL — Production</div>
+            <div class="node-desc">Managed by Render. Activated via DATABASE_URL env variable through dj-database-url.
+            </div>
+            <div class="node-badge badge-green">dj-database-url</div>
+          </div>
+          <div class="node node-green" style="max-width:260px;text-align:center">
+            <span class="node-icon">📁</span>
+            <div class="node-title">Media Storage</div>
+            <div class="node-desc">post_images/ · event_images/ stored on disk, served via /media/ URL.</div>
+            <div class="node-badge badge-green">Pillow processing</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /arch-diagram -->
+
+    <hr class="divider" />
+
+    <!-- ════════ REQUEST LIFECYCLE ════════ -->
+    <div class="flow-section">
+      <div class="section-heading">Workflow Diagram</div>
+      <div class="flow-steps">
+        <div class="flow-step">
+          <div class="flow-bubble"><span>🌐</span>
+            <div class="flow-num">1</div>
+          </div>
+          <div class="flow-text">Browser sends POST /login/ + credentials</div>
+        </div>
+        <div class="flow-arrow"></div>
+        <div class="flow-step">
+          <div class="flow-bubble"><span>🔒</span>
+            <div class="flow-num">2</div>
+          </div>
+          <div class="flow-text">session + Auth middleware validate</div>
+        </div>
+        <div class="flow-arrow"></div>
+        <div class="flow-step">
+          <div class="flow-bubble"><span>🔑</span>
+            <div class="flow-num">3</div>
+          </div>
+          <div class="flow-text">authenticate() hashes &amp; compares password</div>
+        </div>
+        <div class="flow-arrow"></div>
+        <div class="flow-step">
+          <div class="flow-bubble"><span>💾</span>
+            <div class="flow-num">4</div>
+          </div>
+          <div class="flow-text">Session written to DB</div>
+        </div>
+        <div class="flow-arrow"></div>
+        <div class="flow-step">
+          <div class="flow-bubble"><span>🏠</span>
+            <div class="flow-num">5</div>
+          </div>
+          <div class="flow-text">home_view renders feed</div>
+        </div>
+        <div class="flow-arrow"></div>
+        <div class="flow-step">
+          <div class="flow-bubble"><span>📝</span>
+            <div class="flow-num">6</div>
+          </div>
+          <div class="flow-text">User submits Post form (multipart/form-data)</div>
+        </div>
+        <div class="flow-arrow"></div>
+        <div class="flow-step">
+          <div class="flow-bubble"><span>💾</span>
+            <div class="flow-num">7</div>
+          </div>
+          <div class="flow-text">Post saved to DB, image written to media/</div>
+        </div>
+        <div class="flow-arrow"></div>
+        <div class="flow-step">
+          <div class="flow-bubble"><span>🔔</span>
+            <div class="flow-num">8</div>
+          </div>
+          <div class="flow-text">Signals fire, 302 redirect, updated feed loads</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════ AUTH FLOW ════════ -->
+    <div class="auth-flow-wrap">
+      <div class="section-heading">Authentication Flow — Email Domain Restriction</div>
+      <div class="nodes" style="justify-content:center;gap:14px">
+        <div class="node node-blue" style="max-width:210px">
+          <span class="node-icon">📧</span>
+          <div class="node-title">Local Registration</div>
+          <div class="node-desc">CustomUserCreationForm validates email ends with btech22/23/24@rvu.edu.in. Password
+            hashed using PBKDF2-SHA256.</div>
+          <div class="node-badge badge-blue">forms.py</div>
+        </div>
+        <div style="display:flex;align-items:center;color:var(--text-dim);font-size:14px;padding-bottom:24px">or</div>
+        <div class="node node-pink" style="max-width:210px">
+          <span class="node-icon">🔵</span>
+          <div class="node-title">Google OAuth</div>
+          <div class="node-desc">django-allauth redirects user to Google. Returns with OAuth token and profile data.
+          </div>
+          <div class="node-badge badge-pink">GOOGLE_OAUTH_CLIENT_ID</div>
+        </div>
+        <div style="display:flex;align-items:center;color:var(--text-dim);font-size:16px;padding-bottom:24px">→</div>
+        <div class="node node-purple" style="max-width:210px">
+          <span class="node-icon">🛡️</span>
+          <div class="node-title">RVUSocialAccountAdapter</div>
+          <div class="node-desc">pre_social_login() checks email suffix. Non-RVU emails trigger ImmediateHttpResponse
+            redirect to login page.</div>
+          <div class="node-badge badge-purple">adapters.py</div>
+        </div>
+        <div style="display:flex;align-items:center;color:var(--text-dim);font-size:16px;padding-bottom:24px">→</div>
+        <div class="node node-green" style="max-width:210px">
+          <span class="node-icon">✅</span>
+          <div class="node-title">Session Created</div>
+          <div class="node-desc">Session stored in database. sessionid cookie sent. Profile auto-created via post_save
+            signal.</div>
+          <div class="node-badge badge-green">SESSION_COOKIE_AGE = 3600s</div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- ════════ CI/CD ════════ -->
+    <div class="cicd-section">
+      <div class="section-heading">CI / CD Pipeline — GitHub Actions → Render</div>
+      <div class="pipeline">
+        <div class="pipeline-stage">
+          <span class="pipeline-icon">👨‍💻</span>
+          <div class="pipeline-name">Code Push</div>
+          <div class="pipeline-detail">git push to main</div>
+        </div>
+        <div class="pipeline-arrow"></div>
+        <div class="pipeline-stage">
+          <span class="pipeline-icon">⚙️</span>
+          <div class="pipeline-name">CI Runner</div>
+          <div class="pipeline-detail">windows-latest · Python 3.10</div>
+        </div>
+        <div class="pipeline-arrow"></div>
+        <div class="pipeline-stage">
+          <span class="pipeline-icon">📦</span>
+          <div class="pipeline-name">Install Deps</div>
+          <div class="pipeline-detail">pip install -r requirements.txt</div>
+        </div>
+        <div class="pipeline-arrow"></div>
+        <div class="pipeline-stage">
+          <span class="pipeline-icon">🗃️</span>
+          <div class="pipeline-name">Migrate</div>
+          <div class="pipeline-detail">manage.py migrate + collectstatic</div>
+        </div>
+        <div class="pipeline-arrow"></div>
+        <div class="pipeline-stage">
+          <span class="pipeline-icon">🧪</span>
+          <div class="pipeline-name">Test Suite</div>
+          <div class="pipeline-detail">pytest · 13 tests · SQLite</div>
+        </div>
+        <div class="pipeline-arrow"></div>
+        <div class="pipeline-stage" style="border-color:var(--accent4)">
+          <span class="pipeline-icon">🚀</span>
+          <div class="pipeline-name" style="color:var(--accent4)">Deploy</div>
+          <div class="pipeline-detail">Render auto-pulls main → Docker build</div>
+        </div>
+        <div class="pipeline-arrow"></div>
+        <div class="pipeline-stage" style="border-color:var(--accent4)">
+          <span class="pipeline-icon">✅</span>
+          <div class="pipeline-name" style="color:var(--accent4)">Live</div>
+          <div class="pipeline-detail">rvu-verse.onrender.com</div>
+        </div>
+        <div class="pipeline-arrow"></div>
+        <div class="pipeline-stage" style="border-color:var(--accent5)">
+          <span class="pipeline-icon">🎯</span>
+          <div class="pipeline-name" style="color:var(--accent5)">CD Smoke Test</div>
+          <div class="pipeline-detail">Hits live URL · Returns 200 OK</div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- ════════ DB SCHEMA ════════ -->
+    <div class="schema-section">
+      <div class="section-heading">Relational Database Schema — Key Models</div>
+      <div class="schema-grid">
+
+        <div class="schema-card">
+          <div class="schema-header">👤 auth_user (built-in)</div>
+          <div class="schema-body">
+            <div class="schema-field"><span class="field-name">id</span><span class="field-key">PK</span></div>
+            <div class="schema-field"><span class="field-name">username</span><span class="field-type">VARCHAR
+                UNIQUE</span></div>
+            <div class="schema-field"><span class="field-name">email</span><span class="field-type">VARCHAR
+                UNIQUE</span></div>
+            <div class="schema-field"><span class="field-name">password</span><span class="field-type">PBKDF2
+                hash</span></div>
+          </div>
+        </div>
+
+        <div class="schema-card">
+          <div class="schema-header">👤 core_profile</div>
+          <div class="schema-body">
+            <div class="schema-field"><span class="field-name">id</span><span class="field-key">PK</span></div>
+            <div class="schema-field"><span class="field-name">user_id</span><span class="field-key fk">FK → User</span>
+            </div>
+            <div class="schema-field"><span class="field-name">department_id</span><span class="field-key fk">FK →
+                Dept</span></div>
+            <div class="schema-field"><span class="field-name">bio</span><span class="field-type">TEXT</span></div>
+            <div class="schema-field"><span class="field-name">study_year</span><span class="field-type">CHAR
+                choices</span></div>
+            <div class="schema-field"><span class="field-name">last_activity</span><span
+                class="field-type">TIMESTAMP</span></div>
+          </div>
+        </div>
+
+        <div class="schema-card">
+          <div class="schema-header">📝 core_post</div>
+          <div class="schema-body">
+            <div class="schema-field"><span class="field-name">id</span><span class="field-key">PK</span></div>
+            <div class="schema-field"><span class="field-name">user_id</span><span class="field-key fk">FK → User</span>
+            </div>
+            <div class="schema-field"><span class="field-name">department_id</span><span class="field-key fk">FK →
+                Dept</span></div>
+            <div class="schema-field"><span class="field-name">content</span><span class="field-type">TEXT</span></div>
+            <div class="schema-field"><span class="field-name">image</span><span class="field-type">ImageField
+                (optional)</span></div>
+            <div class="schema-field"><span class="field-name">hashtags</span><span class="field-type">VARCHAR</span>
+            </div>
+            <div class="schema-field"><span class="field-name">created_at</span><span
+                class="field-type">TIMESTAMP</span></div>
+          </div>
+        </div>
+
+        <div class="schema-card">
+          <div class="schema-header">❤️ core_like</div>
+          <div class="schema-body">
+            <div class="schema-field"><span class="field-name">id</span><span class="field-key">PK</span></div>
+            <div class="schema-field"><span class="field-name">user_id</span><span class="field-key fk">FK → User</span>
+            </div>
+            <div class="schema-field"><span class="field-name">post_id</span><span class="field-key fk">FK → Post</span>
+            </div>
+            <div class="schema-field"><span class="field-name">created_at</span><span
+                class="field-type">TIMESTAMP</span></div>
+            <div class="schema-field"><span class="field-uq">UNIQUE (user_id, post_id)</span></div>
+          </div>
+        </div>
+
+        <div class="schema-card">
+          <div class="schema-header">🔗 core_follow</div>
+          <div class="schema-body">
+            <div class="schema-field"><span class="field-name">id</span><span class="field-key">PK</span></div>
+            <div class="schema-field"><span class="field-name">follower_id</span><span class="field-key fk">FK →
+                User</span></div>
+            <div class="schema-field"><span class="field-name">following_id</span><span class="field-key fk">FK →
+                User</span></div>
+            <div class="schema-field"><span class="field-name">created_at</span><span
+                class="field-type">TIMESTAMP</span></div>
+            <div class="schema-field"><span class="field-uq">UNIQUE (follower_id, following_id)</span></div>
+          </div>
+        </div>
+
+        <div class="schema-card">
+          <div class="schema-header">✉️ core_message</div>
+          <div class="schema-body">
+            <div class="schema-field"><span class="field-name">id</span><span class="field-key">PK</span></div>
+            <div class="schema-field"><span class="field-name">sender_id</span><span class="field-key fk">FK →
+                User</span></div>
+            <div class="schema-field"><span class="field-name">receiver_id</span><span class="field-key fk">FK →
+                User</span></div>
+            <div class="schema-field"><span class="field-name">content</span><span class="field-type">TEXT</span></div>
+            <div class="schema-field"><span class="field-name">is_read</span><span class="field-type">BOOLEAN</span>
+            </div>
+            <div class="schema-field"><span class="field-name">created_at</span><span
+                class="field-type">TIMESTAMP</span></div>
+          </div>
+        </div>
+
+        <div class="schema-card">
+          <div class="schema-header">🔔 core_notification</div>
+          <div class="schema-body">
+            <div class="schema-field"><span class="field-name">id</span><span class="field-key">PK</span></div>
+            <div class="schema-field"><span class="field-name">user_id</span><span class="field-key fk">FK → User
+                (recipient)</span></div>
+            <div class="schema-field"><span class="field-name">from_user_id</span><span class="field-key fk">FK → User
+                (actor)</span></div>
+            <div class="schema-field"><span class="field-name">notification_type</span><span
+                class="field-type">like/comment/follow…</span></div>
+            <div class="schema-field"><span class="field-name">post_id / event_id</span><span class="field-key fk">FK
+                (optional)</span></div>
+            <div class="schema-field"><span class="field-name">is_read</span><span class="field-type">BOOLEAN</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="schema-card">
+          <div class="schema-header">📅 core_event</div>
+          <div class="schema-body">
+            <div class="schema-field"><span class="field-name">id</span><span class="field-key">PK</span></div>
+            <div class="schema-field"><span class="field-name">organizer_id</span><span class="field-key fk">FK →
+                User</span></div>
+            <div class="schema-field"><span class="field-name">department_id</span><span class="field-key fk">FK →
+                Dept</span></div>
+            <div class="schema-field"><span class="field-name">title, location</span><span
+                class="field-type">VARCHAR</span></div>
+            <div class="schema-field"><span class="field-name">start_date / end_date</span><span
+                class="field-type">TIMESTAMP</span></div>
+            <div class="schema-field"><span class="field-name">status</span><span
+                class="field-type">upcoming/ongoing/done…</span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <hr class="divider" />
+
+    <!-- ════════ TESTING ════════ -->
+    <div class="testing-section" style="margin-top: 48px;">
+      <div class="section-heading">Testing</div>
+      <div style="background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 12px;">
+          <thead>
+            <tr style="background: var(--surface); border-bottom: 1px solid var(--border);">
+              <th style="padding: 12px 16px; color: var(--text-primary); font-weight: 700;">Test File</th>
+              <th style="padding: 12px 16px; color: var(--text-primary); font-weight: 700;">Description</th>
+            </tr>
+          </thead>
+          <tbody style="color: var(--text-secondary);">
+            <tr style="border-bottom: 1px solid var(--border);">
+              <td style="padding: 12px 16px; font-family: 'Fira Code', monospace; color: var(--accent);">test_user.py
+              </td>
+              <td style="padding: 12px 16px;">Validates that user registration stores the correct email domain.</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border);">
+              <td style="padding: 12px 16px; font-family: 'Fira Code', monospace; color: var(--accent);">test_Profile.py
+              </td>
+              <td style="padding: 12px 16px;">Verifies that a Profile is automatically created when a User is saved.
+              </td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border);">
+              <td style="padding: 12px 16px; font-family: 'Fira Code', monospace; color: var(--accent);">test_post.py
+              </td>
+              <td style="padding: 12px 16px;">Confirms that a post with an image is saved correctly.</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border);">
+              <td style="padding: 12px 16px; font-family: 'Fira Code', monospace; color: var(--accent);">test_comment.py
+              </td>
+              <td style="padding: 12px 16px;">Verifies that comments are linked to the correct post.</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border);">
+              <td style="padding: 12px 16px; font-family: 'Fira Code', monospace; color: var(--accent);">
+                test_like_count.py</td>
+              <td style="padding: 12px 16px;">Checks that the like counter increments correctly.</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border);">
+              <td style="padding: 12px 16px; font-family: 'Fira Code', monospace; color: var(--accent);">test_follow.py
+              </td>
+              <td style="padding: 12px 16px;">Tests the follow and unfollow flow.</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border);">
+              <td style="padding: 12px 16px; font-family: 'Fira Code', monospace; color: var(--accent);">
+                test_hashtags.py</td>
+              <td style="padding: 12px 16px;">Validates the extract_hashtags() method on Post.</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border);">
+              <td style="padding: 12px 16px; font-family: 'Fira Code', monospace; color: var(--accent);">
+                test_notification.py</td>
+              <td style="padding: 12px 16px;">Confirms notifications are created on relevant events.</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border);">
+              <td style="padding: 12px 16px; font-family: 'Fira Code', monospace; color: var(--accent);">
+                test_event_registration.py</td>
+              <td style="padding: 12px 16px;">Verifies the default registration status.</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border);">
+              <td style="padding: 12px 16px; font-family: 'Fira Code', monospace; color: var(--accent);">test_models.py
+              </td>
+              <td style="padding: 12px 16px;">Tests Department model string representations.</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border);">
+              <td style="padding: 12px 16px; font-family: 'Fira Code', monospace; color: var(--accent);">test_message.py
+              </td>
+              <td style="padding: 12px 16px;">Validates that messages are created and default to unread status.</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border);">
+              <td style="padding: 12px 16px; font-family: 'Fira Code', monospace; color: var(--accent);">test_basic.py
+              </td>
+              <td style="padding: 12px 16px;">Basic arithmetic sanity check confirming pytest is working.</td>
+            </tr>
+            <tr>
+              <td style="padding: 12px 16px; font-family: 'Fira Code', monospace; color: var(--accent);">
+                test_integration.py</td>
+              <td style="padding: 12px 16px;">Integration suite simulating full user flows (login, post creation, and
+                mutual-follow messaging).</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /container -->
+
+  <script>
+    const toggle = document.getElementById('themeToggle');
+    const root = document.documentElement;
+
+    // Default: dark mode → checkbox unchecked
+    toggle.checked = false;
+
+    toggle.addEventListener('change', () => {
+      root.setAttribute('data-theme', toggle.checked ? 'light' : 'dark');
+    });
+  </script>
+</body>
+
+</html>
