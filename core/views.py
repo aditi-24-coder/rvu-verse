@@ -287,7 +287,7 @@ def messages_view(request):
         
         if not mutual_follow:
             messages.error(request, "You can only message users who follow you and whom you follow.")
-            return redirect('messages_view')
+            return redirect('messages')
         
         # Get messages between the two users
         messages_with_user = Message.objects.filter(
